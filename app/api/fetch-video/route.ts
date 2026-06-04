@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await response.json();
+    console.log("API RESPONSE:", JSON.stringify(data, null, 2));
     return NextResponse.json(data);
 
   } catch (err) {

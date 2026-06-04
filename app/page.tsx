@@ -57,12 +57,12 @@ export default function Home() {
       <Navbar />
 
       <main className="flex-1">
-        <section className="bg-gradient-to-b from-slate-50 to-white pt-14 pb-10 px-4">
+    <section className="bg-gradient-to-b from-slate-50 to-white pt-8 pb-8 px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-5xl sm:text-6xl font-black tracking-tight text-gray-900 mb-3">
 Awaisify <span className="text-blue-600">Down</span>            </h1>
             <p className="text-lg font-semibold text-gray-700 mb-1">Paste link. Download video.</p>
-            <p className="text-sm text-gray-500 mb-8">
+            <p className="text-sm text-gray-500 mb-5">
               Supports YouTube, TikTok, Instagram, Facebook, X and more public video links.
             </p>
 
@@ -87,10 +87,9 @@ Awaisify <span className="text-blue-600">Down</span>            </h1>
                 <button
                   onClick={handleFetch}
                   disabled={status === "loading" || !url.trim()}
-                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold px-6 py-3 rounded-xl transition-colors whitespace-nowrap text-sm"
-                >
-                  {status === "loading" ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-                  {status === "loading" ? "Fetching..." : "Fetch"}
+className="flex items-center gap-2 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-semibold px-4 py-3 rounded-xl transition-colors whitespace-nowrap text-sm"                >
+                  {status === "loading" ? <Loader2 size={16} className="animate-spin" /> : <Download size={18} />}
+<span className="hidden sm:inline">{status === "loading" ? "Fetching..." : "Fetch"}</span>
                 </button>
               </div>
 
