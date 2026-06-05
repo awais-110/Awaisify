@@ -3,9 +3,14 @@ import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://awaisify.site"),
   title: "Awaisify Down - Fast Video Downloader",
   description:
     "Download videos from YouTube, TikTok, Instagram, Facebook, X and more. Powered by Awaisify Down.",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+  },
 };
 
 const ADSENSE_ID = process.env.NEXT_PUBLIC_ADSENSE_ID || "";
@@ -18,10 +23,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        {children}
-
-        {/* Google AdSense Script */}
+      <head>
+        {/* Google AdSense */}
         {ADSENSE_ID && ADSENSE_ID !== "ca-pub-XXXXXXXXXX" && (
           <Script
             async
@@ -48,7 +51,9 @@ export default function RootLayout({
             </Script>
           </>
         )}
-      </body>
+      </head>
+
+      <body>{children}</body>
     </html>
   );
 }

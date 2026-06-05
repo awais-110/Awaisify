@@ -1,33 +1,48 @@
-import Link from "next/link";
-import { blogs } from "@/lib/blogs";
+import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import BlogListing from "@/components/BlogListing";
+import SchemaScript from "@/components/SchemaScript";
+import { BASE_URL } from "@/lib/tool-pages";
+import { blogs } from "@/lib/blogs";
 
-export const metadata = {
-  title: "Blog - Awaisify Down | Video Download Guides & Tips",
-  description: "Read our latest guides on how to download videos from TikTok, Instagram, YouTube, Facebook and more.",
+export const metadata: Metadata = {
+  title: "Blog — Awaisify Down Video Guides & Tips",
+  description: "Read video download guides, MP3 tips, and platform-specific tutorials for YouTube, TikTok, Instagram, and more.",
+  alternates: {
+    canonical: `${BASE_URL}/blog`,
+  },
+  openGraph: {
+    title: "Blog — Awaisify Down Video Guides & Tips",
+    description: "Read video download guides, MP3 tips, and platform-specific tutorials for YouTube, TikTok, Instagram, and more.",
+    url: `${BASE_URL}/blog`,
+    images: [`${BASE_URL}/favicon.ico`],
+    type: "website",
+  },
 };
 
 export default function BlogPage() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
+      <SchemaScript
+        data={{
+          "@context": "https://schema.org",
+          "@type": "Blog",
+          name: "Awaisify Down Blog",
+          description: "Guides, tips, and updates for downloading and managing online video content.",
+          url: `${BASE_URL}/blog`,
+        }}
+      />
       <Navbar />
-      <main className="flex-1 max-w-4xl mx-auto px-4 py-10 w-full">
-        <h1 className="text-3xl font-black text-gray-900 mb-2">Blog</h1>
-        <p className="text-gray-500 text-sm mb-8">Guides, tips and tricks for downloading videos online.</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {blogs.map((blog) => (
-            <Link key={blog.slug} href={`/blog/${blog.slug}`} className="group block bg-white border border-gray-200 rounded-2xl p-5 hover:shadow-md transition-shadow">
-              <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{blog.category}</span>
-              <h2 className="font-bold text-gray-900 mt-2 mb-1 text-sm leading-snug group-hover:text-blue-600 transition-colors">{blog.title}</h2>
-              <p className="text-xs text-gray-500 line-clamp-2">{blog.description}</p>
-              <div className="flex items-center gap-2 mt-3 text-xs text-gray-400">
-                <span>{blog.date}</span>
-                <span>•</span>
-                <span>{blog.readTime}</span>
-              </div>
-            </Link>
-          ))}
+      <main className="flex-1 px-4 py-10">
+        <div className="mx-auto max-w-6xl">
+          <h1 className="text-4xl font-black tracking-tight text-gray-900">Awaisify Down Blog</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-600">
+            Practical guides for downloading videos, converting audio, removing TikTok watermarks, and building better offline media workflows.
+          </p>
+          <div className="mt-8">
+            <BlogListing blogs={blogs} />
+          </div>
         </div>
       </main>
       <Footer />

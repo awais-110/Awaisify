@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Awaisify Down favicon">
+  <defs>
+    <linearGradient id="accent" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#1d4ed8" />
+      <stop offset="100%" stop-color="#22d3ee" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="72" fill="#122252" />
+  <path
+    d="M95 430 218 112h82l123 318h-69l-43-113H201l-43 113H95Z"
+    fill="#ffffff"
+  />
+  <path
+    d="m257 193 42 106h-84l42-106Z"
+    fill="#122252"
+  />
+  <path
+    d="M96 398c35-40 92-72 162-92 70-20 144-26 213-10 16 4 31 9 45 17-9-20-28-34-50-43-69-28-173-15-258 10-58 17-97 40-112 61Z"
+    fill="url(#accent)"
+  />
+  <rect x="233" y="360" width="46" height="63" rx="4" fill="url(#accent)" />
+  <path d="m256 458-60-63h35v-26h50v26h35l-60 63Z" fill="url(#accent)" />
+  <rect x="195" y="448" width="122" height="18" rx="9" fill="url(#accent)" />
+</svg>

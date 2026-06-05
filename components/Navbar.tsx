@@ -1,36 +1,133 @@
-import { Heart, Crown, BookOpen, Phone } from "lucide-react";
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import { ChevronDown, Heart, Menu, Phone, X } from "lucide-react";
+
+const toolLinks = [
+  { href: "/youtube-downloader", label: "YouTube Downloader" },
+  { href: "/tiktok-downloader", label: "TikTok Downloader" },
+  { href: "/instagram-downloader", label: "Instagram Downloader" },
+  { href: "/facebook-downloader", label: "Facebook Downloader" },
+  { href: "/mp3-converter", label: "MP3 Converter" },
+  { href: "/tiktok-watermark-remover", label: "TikTok Watermark Remover" },
+];
+
+const navLinks = [
+  { href: "/blog", label: "Blog" },
+  { href: "/faq", label: "FAQ" },
+  { href: "/contact", label: "Contact" },
+];
 
 export default function Navbar() {
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isToolsOpen, setIsToolsOpen] = useState(false);
+
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b-2 border-gray-100 px-4 py-3" style={{boxShadow: '0 2px 12px 0 rgba(0,0,0,0.07)'}}>
-      <div className="max-w-6xl mx-auto flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <svg viewBox="0 0 24 24" fill="white" className="w-4 h-4">
+    <nav className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 px-4 py-3 backdrop-blur">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+            <svg viewBox="0 0 24 24" fill="white" className="h-4 w-4">
               <polygon points="6,4 20,12 6,20" />
             </svg>
           </div>
-          <span className="font-black text-lg tracking-tight text-gray-900 whitespace-nowrap">
+          <span className="whitespace-nowrap text-lg font-black tracking-tight text-gray-900">
             Awaisify <span className="text-blue-600">Down</span>
           </span>
         </Link>
 
-        <div className="flex items-center gap-1.5">
-          <Link href="/blog" className="hidden sm:flex items-center gap-1.5 border border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 text-gray-700 text-sm font-medium px-3 py-2 rounded-xl transition-all">
-            <BookOpen size={14} /> Blog
-          </Link>
-          <Link href="/donate" className="flex items-center gap-1.5 border border-red-200 hover:border-red-300 hover:bg-red-50 text-red-500 text-sm font-medium px-3 py-2 rounded-xl transition-all">
-            <Heart size={14} /> <span className="hidden sm:inline">Donate</span>
-          </Link>
-          <Link href="/contact" className="hidden sm:flex items-center gap-1.5 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium px-3 py-2 rounded-xl transition-all">
-            <Phone size={14} /> Contact
-          </Link>
-          <Link href="/faq" className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-3 py-2 rounded-xl transition-all shadow-sm">
-            <Crown size={14} /> <span className="hidden sm:inline">Subscribe</span><span className="sm:hidden">Pro</span>
+        <div className="hidden items-center gap-2 lg:flex">
+          <div className="relative">
+            <button
+              onClick={() => setIsToolsOpen((value) => !value)}
+              className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+            >
+              Tools <ChevronDown size={14} className={`transition-transform ${isToolsOpen ? "rotate-180" : ""}`} />
+            </button>
+            {isToolsOpen && (
+              <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-gray-200 bg-white p-2 shadow-lg">
+                {toolLinks.map((tool) => (
+                  <Link
+                    key={tool.href}
+                    href={tool.href}
+                    onClick={() => setIsToolsOpen(false)}
+                    className="block rounded-xl px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                  >
+                    {tool.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {navLinks.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+            >
+              {item.label}
+            </Link>
+          ))}
+
+          <Link
+            href="/donate"
+            className="flex items-center gap-1.5 rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-500 transition-colors hover:border-red-300 hover:bg-red-50"
+          >
+            <Heart size={14} /> Donate
           </Link>
         </div>
+
+        <button
+          onClick={() => setIsMobileOpen((value) => !value)}
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 text-gray-700 lg:hidden"
+        >
+          {isMobileOpen ? <X size={18} /> : <Menu size={18} />}
+        </button>
       </div>
+
+      {isMobileOpen && (
+        <div className="mx-auto mt-3 max-w-6xl rounded-3xl border border-gray-200 bg-white p-3 shadow-sm lg:hidden">
+          <div className="space-y-2">
+            <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3">
+              <div className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-gray-400">Tools</div>
+              <div className="space-y-1">
+                {toolLinks.map((tool) => (
+                  <Link
+                    key={tool.href}
+                    href={tool.href}
+                    onClick={() => setIsMobileOpen(false)}
+                    className="block rounded-xl px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-white hover:text-blue-600"
+                  >
+                    {tool.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {navLinks.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setIsMobileOpen(false)}
+                className="flex items-center gap-2 rounded-2xl border border-gray-200 px-3 py-3 text-sm font-semibold text-gray-700 transition-colors hover:border-blue-200 hover:text-blue-600"
+              >
+                {item.href === "/contact" && <Phone size={15} />}
+                {item.label}
+              </Link>
+            ))}
+
+            <Link
+              href="/donate"
+              onClick={() => setIsMobileOpen(false)}
+              className="flex items-center gap-2 rounded-2xl border border-red-200 px-3 py-3 text-sm font-semibold text-red-500 transition-colors hover:border-red-300 hover:bg-red-50"
+            >
+              <Heart size={15} /> Donate
+            </Link>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

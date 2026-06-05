@@ -1,83 +1,174 @@
 import { NextRequest, NextResponse } from "next/server";
 
+type JsonRecord = Record<string, unknown>;
+
+interface MediaItem {
+  quality: string;
+  extension: string;
+  url: string;
+  videoAvailable: boolean;
+  audioAvailable: boolean;
+  formattedSize: string;
+}
+
+interface VideoResponse {
+  title: string;
+  thumbnail: string;
+  source: string;
+  medias: MediaItem[];
+}
+
+class ApiError extends Error {
+  status: number;
+  constructor(message: string, status = 500) {
+    super(message);
+    this.status = status;
+  }
+}
+
+function isRecord(value: unknown): value is JsonRecord {
+  return typeof value === "object" && value !== null;
+}
+
 function isYouTubeUrl(url: string): boolean {
   return url.includes("youtube.com") || url.includes("youtu.be");
 }
 
 function getVideoId(url: string): string | null {
   try {
-    if (url.includes("youtu.be/")) {
-      return url.split("youtu.be/")[1]?.split("?")[0];
-    }
+    if (url.includes("youtu.be/")) return url.split("youtu.be/")[1]?.split("?")[0] || null;
     return new URL(url).searchParams.get("v");
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
-async function fetchYouTube(url: string) {
+async function readJsonSafe<T>(response: Response): Promise<T | null> {
+  const text = await response.text();
+  try { return text ? (JSON.parse(text) as T) : null; } catch { return null; }
+}
+
+function getStringValue(record: JsonRecord, keys: string[]): string {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return "";
+}
+
+function getMediaUrl(media: unknown): string {
+  if (!isRecord(media)) return "";
+  return getStringValue(media, ["url","download_url","downloadUrl","link","video","video_url","src"]);
+}
+
+function inferExtension(url: string, fallback = "mp4"): string {
+  try {
+    const pathname = new URL(url).pathname;
+    const ext = (pathname.split("/").pop() || "").split(".").pop() || "";
+    return ext ? ext.toLowerCase() : fallback;
+  } catch { return fallback; }
+}
+
+function normalizeMedia(media: unknown): MediaItem | null {
+  if (!isRecord(media)) return null;
+  const url = getMediaUrl(media);
+  if (!url) return null;
+  const rawExt = getStringValue(media, ["extension","ext","type"]) || inferExtension(url, url.includes(".mp3") ? "mp3" : "mp4");
+  const extension = rawExt.toLowerCase();
+  return {
+    quality: getStringValue(media, ["quality","label","resolution"]) || "HD",
+    extension,
+    url,
+    videoAvailable: extension !== "mp3",
+    audioAvailable: extension === "mp3",
+    formattedSize: getStringValue(media, ["formattedSize","size","filesize"]) || "-",
+  };
+}
+
+function normalizeResponse(data: unknown, url: string): VideoResponse {
+  if (!isRecord(data)) throw new ApiError("Failed to read video info", 502);
+
+  const payload = (isRecord(data["data"]) ? data["data"] : data) as JsonRecord;
+
+  const getCaption = (d: JsonRecord) => getStringValue(d, ["caption","description","title","desc","text"]);
+  const getThumbnail = (d: JsonRecord) => getStringValue(d, ["thumbnail","thumb","image","picture"]);
+
+  const title = getCaption(payload) || getCaption(data) || getStringValue(payload, ["title"]) || "Video";
+  const thumbnail = getThumbnail(payload) || getThumbnail(data);
+  const source = getStringValue(payload, ["source"]) || getStringValue(data, ["source"]) || url;
+
+  const rawMedias = payload["medias"] ?? payload["media"] ?? payload["videos"] ?? payload["links"] ?? data["medias"] ?? [];
+  const mediaList = Array.isArray(rawMedias) ? rawMedias : [rawMedias];
+  const medias = mediaList.map(normalizeMedia).filter((m): m is MediaItem => m !== null);
+
+  if (!medias.length) {
+    const direct = normalizeMedia(payload);
+    if (direct) medias.push(direct);
+  }
+
+  return { title, thumbnail, source, medias };
+}
+
+async function fetchYouTube(url: string): Promise<VideoResponse> {
   const videoId = getVideoId(url);
-  if (!videoId) throw new Error("Invalid YouTube URL");
+  if (!videoId) throw new ApiError("Invalid YouTube URL", 400);
 
   const res = await fetch(
     `https://youtube-video-fast-downloader-24-7.p.rapidapi.com/get_video_details_and_quality?id=${videoId}`,
     {
       headers: {
-        "x-rapidapi-key": process.env.RAPIDAPI_KEY!,
+        "x-rapidapi-key": process.env.RAPIDAPI_KEY || "",
         "x-rapidapi-host": "youtube-video-fast-downloader-24-7.p.rapidapi.com",
       },
+      cache: "no-store",
     }
   );
 
-  const details = await res.json();
+  const details = await readJsonSafe<JsonRecord>(res);
+  if (!res.ok || !details) return fetchOther(url);
 
-  if (!res.ok) return await fetchOther(url);
+  const qualitiesRaw = details["qualities"] ?? details["formats"] ?? details["videos"] ?? details["links"] ?? [];
+  const qualities = Array.isArray(qualitiesRaw) ? qualitiesRaw : [];
+  const medias = qualities.map(normalizeMedia).filter((m): m is MediaItem => m !== null);
 
-  const qualities = details.qualities || details.formats || details.videos || details.links || [];
-  const medias = qualities.map((q: any) => ({
-    quality: q.quality || q.label || q.resolution || "HD",
-    extension: q.extension || "mp4",
-    url: q.url || q.download_url || q.link || "",
-    videoAvailable: true,
-    audioAvailable: false,
-    formattedSize: q.size || q.filesize || "-",
-  }));
+  const title = getStringValue(details, ["title"]) || "YouTube Video";
+  const thumbnail = getStringValue(details, ["thumbnail","thumb","image"]) || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
 
-  return {
-    title: details.title || "YouTube Video",
-    thumbnail: details.thumbnail || details.thumb || details.image || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-    source: url,
-    medias: medias.length > 0 ? medias : (await fetchOther(url)).medias,
-  };
+  if (!medias.length) {
+    const fallback = await fetchOther(url);
+    return { title, thumbnail, source: url, medias: fallback.medias };
+  }
+
+  return { title, thumbnail, source: url, medias };
 }
 
-async function fetchOther(url: string) {
-  const response = await fetch(process.env.RAPIDAPI_URL!, {
+async function fetchOther(url: string): Promise<VideoResponse> {
+  const res = await fetch(process.env.RAPIDAPI_URL || "", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-rapidapi-key": process.env.RAPIDAPI_KEY!,
-      "x-rapidapi-host": process.env.RAPIDAPI_HOST!,
+      "x-rapidapi-key": process.env.RAPIDAPI_KEY || "",
+      "x-rapidapi-host": process.env.RAPIDAPI_HOST || "",
     },
     body: JSON.stringify({ url }),
+    cache: "no-store",
   });
 
-  if (!response.ok) {
-    const err = await response.text();
-    console.error("RapidAPI error:", err);
-    throw new Error("Failed to fetch video info");
+  if (!res.ok) {
+    const errData = await readJsonSafe<JsonRecord>(res);
+    const message = res.status === 429
+      ? "Too many requests. Please wait a moment."
+      : (isRecord(errData) ? getStringValue(errData as JsonRecord, ["message","error","msg"]) : "") || "Failed to fetch video info";
+    throw new ApiError(message, res.status);
   }
 
-  const data = await response.json();
-  return data;
+  const data = await readJsonSafe<unknown>(res);
+  if (!data) throw new ApiError("Failed to read video info", 502);
+  return normalizeResponse(data, url);
 }
 
 const ALLOWED_DOMAINS = [
-  "youtube.com", "youtu.be",
-  "tiktok.com", "instagram.com",
-  "facebook.com", "fb.watch",
-  "twitter.com", "x.com",
-  "vimeo.com", "dailymotion.com",
+  "youtube.com","youtu.be","tiktok.com","instagram.com",
+  "facebook.com","fb.watch","twitter.com","x.com",
+  "vimeo.com","dailymotion.com",
 ];
 
 export async function POST(req: NextRequest) {
@@ -85,40 +176,25 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const url = body?.url?.trim();
 
-    // 1. URL required
-    if (!url) {
-      return NextResponse.json({ error: "URL is required" }, { status: 400 });
-    }
+    if (!url) return NextResponse.json({ error: "URL is required" }, { status: 400 });
+    if (url.length > 500) return NextResponse.json({ error: "URL too long" }, { status: 400 });
 
-    // 2. Length check
-    if (url.length > 500) {
-      return NextResponse.json({ error: "URL too long" }, { status: 400 });
-    }
-
-    // 3. Valid URL format
     let parsedUrl: URL;
-    try {
-      parsedUrl = new URL(url);
-    } catch {
+    try { parsedUrl = new URL(url); } catch {
       return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
     }
 
-    // 4. HTTPS only
-    if (parsedUrl.protocol !== "https:") {
-      return NextResponse.json({ error: "Only HTTPS URLs allowed" }, { status: 400 });
-    }
+    if (parsedUrl.protocol !== "https:") return NextResponse.json({ error: "Only HTTPS URLs allowed" }, { status: 400 });
 
-    // 5. Allowed platforms only
     const isAllowed = ALLOWED_DOMAINS.some(d => parsedUrl.hostname.includes(d));
-    if (!isAllowed) {
-      return NextResponse.json({ error: "Platform not supported" }, { status: 400 });
-    }
+    if (!isAllowed) return NextResponse.json({ error: "Platform not supported" }, { status: 400 });
 
     const data = isYouTubeUrl(url) ? await fetchYouTube(url) : await fetchOther(url);
     return NextResponse.json(data);
 
-  } catch (err: any) {
-    console.error("Server error:", err);
-    return NextResponse.json({ error: err.message || "Internal server error" }, { status: 500 });
+  } catch (err: unknown) {
+    const status = err instanceof ApiError ? err.status : 500;
+    const message = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status });
   }
 }
