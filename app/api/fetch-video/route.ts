@@ -30,7 +30,6 @@ async function fetchYouTube(url: string) {
   );
 
   const details = await res.json();
-  console.log("YT RESPONSE:", JSON.stringify(details, null, 2));
 
   if (!res.ok) return await fetchOther(url);
 
@@ -70,14 +69,50 @@ async function fetchOther(url: string) {
   }
 
   const data = await response.json();
-  console.log("OTHER API RESPONSE:", JSON.stringify(data, null, 2));
   return data;
 }
 
+const ALLOWED_DOMAINS = [
+  "youtube.com", "youtu.be",
+  "tiktok.com", "instagram.com",
+  "facebook.com", "fb.watch",
+  "twitter.com", "x.com",
+  "vimeo.com", "dailymotion.com",
+];
+
 export async function POST(req: NextRequest) {
   try {
-    const { url } = await req.json();
-    if (!url) return NextResponse.json({ error: "URL is required" }, { status: 400 });
+    const body = await req.json();
+    const url = body?.url?.trim();
+
+    // 1. URL required
+    if (!url) {
+      return NextResponse.json({ error: "URL is required" }, { status: 400 });
+    }
+
+    // 2. Length check
+    if (url.length > 500) {
+      return NextResponse.json({ error: "URL too long" }, { status: 400 });
+    }
+
+    // 3. Valid URL format
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(url);
+    } catch {
+      return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
+    }
+
+    // 4. HTTPS only
+    if (parsedUrl.protocol !== "https:") {
+      return NextResponse.json({ error: "Only HTTPS URLs allowed" }, { status: 400 });
+    }
+
+    // 5. Allowed platforms only
+    const isAllowed = ALLOWED_DOMAINS.some(d => parsedUrl.hostname.includes(d));
+    if (!isAllowed) {
+      return NextResponse.json({ error: "Platform not supported" }, { status: 400 });
+    }
 
     const data = isYouTubeUrl(url) ? await fetchYouTube(url) : await fetchOther(url);
     return NextResponse.json(data);

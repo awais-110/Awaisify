@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import Features from "@/components/Features";
 import Stats from "@/components/Stats";
 import VideoResult from "@/components/VideoResult";
+import AdBanner from "@/components/AdBanner";
 import { Link2, Download, X, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 
 type Status = "idle" | "loading" | "success" | "error";
@@ -57,17 +58,20 @@ export default function Home() {
       <Navbar />
 
       <main className="flex-1">
-<section className="hero-gradient pt-8 pb-8 px-4">
-            <div className="max-w-3xl mx-auto text-center">
+        <section className="hero-gradient pt-8 pb-8 px-4">
+          <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-5xl sm:text-6xl font-black tracking-tight text-gray-900 mb-3">
-Awaisify <span className="text-blue-600">Down</span>            </h1>
+              Awaisify <span className="text-blue-600">Down</span>
+            </h1>
             <p className="text-lg font-semibold text-gray-700 mb-1">Paste link. Download video.</p>
             <p className="text-sm text-gray-500 mb-5">
               Supports YouTube, TikTok, Instagram, Facebook, X and more public video links.
             </p>
 
-<div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-100 p-4 transition-all duration-300 hover:shadow-xl hover:border-blue-300">              <div className="flex items-center gap-3">
-<div className="flex items-center flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 gap-3 focus-within:border-blue-400 focus-within:bg-white focus-within:shadow-sm transition-all duration-200">                  <Link2 size={18} className="text-gray-400 flex-shrink-0" />
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-100 p-4 transition-all duration-300 hover:shadow-xl hover:border-blue-300">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 gap-3 focus-within:border-blue-400 focus-within:bg-white focus-within:shadow-sm transition-all duration-200">
+                  <Link2 size={18} className="text-gray-400 flex-shrink-0" />
                   <input
                     type="text"
                     value={url}
@@ -85,8 +89,9 @@ Awaisify <span className="text-blue-600">Down</span>            </h1>
                 <button
                   onClick={handleFetch}
                   disabled={status === "loading" || !url.trim()}
-className="flex items-center gap-2 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-semibold px-4 py-3 rounded-xl transition-all whitespace-nowrap text-sm fetch-btn-animate hover:scale-105 active:scale-95"                >
-                 {status === "loading" ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
+                  className="flex items-center gap-2 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-semibold px-4 py-3 rounded-xl transition-all whitespace-nowrap text-sm fetch-btn-animate hover:scale-105 active:scale-95"
+                >
+                  {status === "loading" ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
                 </button>
               </div>
 
@@ -102,7 +107,7 @@ className="flex items-center gap-2 bg-green-500 hover:bg-green-600 disabled:bg-g
                   </span>
                 )}
                 {(status === "idle" || status === "loading") && (
-                  <span className="text-xs text-gray-400"> Auto-detect platform</span>
+                  <span className="text-xs text-gray-400">Auto-detect platform</span>
                 )}
                 <span className="text-xs text-emerald-600 font-medium">🛡 Safe • Fast • Secure</span>
               </div>
@@ -110,22 +115,39 @@ className="flex items-center gap-2 bg-green-500 hover:bg-green-600 disabled:bg-g
           </div>
         </section>
 
+        {/* AD — hero ke neeche */}
+        <div className="max-w-3xl mx-auto px-4 py-2">
+          <AdBanner slot="YOUR_SLOT_1" format="horizontal" />
+        </div>
+
         {status === "success" && video && (
-  <section className="px-4 pb-10">
-    <div className="max-w-3xl mx-auto mb-3 flex justify-end">
-      <button
-        onClick={handleClear}
-        className="flex items-center gap-2 text-xs text-gray-500 hover:text-blue-600 border border-gray-200 hover:border-blue-300 px-3 py-1.5 rounded-lg transition-colors"
-      >
-        ↩ Download Another Video
-      </button>
-    </div>
-    <VideoResult video={video} />
-  </section>
-)}
+          <section className="px-4 pb-10">
+            <div className="max-w-3xl mx-auto mb-3 flex justify-end">
+              <button
+                onClick={handleClear}
+                className="flex items-center gap-2 text-xs text-gray-500 hover:text-blue-600 border border-gray-200 hover:border-blue-300 px-3 py-1.5 rounded-lg transition-colors"
+              >
+                ↩ Download Another Video
+              </button>
+            </div>
+            <VideoResult video={video} />
+          </section>
+        )}
+
+        {/* AD — result ke neeche */}
+        {status === "success" && (
+          <div className="max-w-3xl mx-auto px-4 py-2">
+            <AdBanner slot="YOUR_SLOT_2" format="rectangle" />
+          </div>
+        )}
 
         <Features />
         <Stats />
+
+        {/* AD — footer ke upar */}
+        <div className="max-w-3xl mx-auto px-4 py-4">
+          <AdBanner slot="YOUR_SLOT_3" format="horizontal" />
+        </div>
       </main>
 
       <Footer />
