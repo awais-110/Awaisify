@@ -242,10 +242,14 @@ export default function Home() {
                     onKeyDown={(e) => e.key === "Enter" && handleFetch()}
                     placeholder="Paste video URL here..."
                     className="flex-1 bg-transparent text-sm text-gray-800 placeholder-gray-400 outline-none"
+                    aria-label="Video URL input"
                   />
-
                   {url && (
-                    <button onClick={handleClear} className="text-gray-400 hover:text-gray-600">
+                    <button
+                      onClick={handleClear}
+                      aria-label="Clear URL"
+                      className="text-gray-400 hover:text-gray-600"
+                    >
                       <X size={16} />
                     </button>
                   )}
@@ -254,6 +258,7 @@ export default function Home() {
                 <button
                   onClick={handleFetch}
                   disabled={status === "loading" || !url.trim()}
+                  aria-label="Fetch video"
                   className="btn-shimmer flex items-center justify-center rounded-2xl px-4 py-3 text-white shadow-lg shadow-green-200 transition-all hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
                   {status === "loading" ? (
@@ -270,17 +275,14 @@ export default function Home() {
                     <CheckCircle2 size={14} /> Link fetched successfully
                   </span>
                 )}
-
                 {status === "error" && (
                   <span className="flex items-center gap-1.5 text-xs font-medium text-red-500">
                     <AlertCircle size={14} /> {error}
                   </span>
                 )}
-
                 {(status === "idle" || status === "loading") && (
                   <span className="text-xs text-gray-400">Auto-detect platform</span>
                 )}
-
                 <span className="text-xs font-medium text-emerald-600">Safe • Fast • Secure</span>
               </div>
             </div>
@@ -292,12 +294,12 @@ export default function Home() {
             <div className="max-w-3xl mx-auto mb-3 flex justify-end">
               <button
                 onClick={handleClear}
+                aria-label="Download another video"
                 className="flex items-center gap-2 text-xs text-gray-500 hover:text-blue-600 border border-gray-200 hover:border-blue-300 px-3 py-1.5 rounded-lg transition-colors"
               >
                 ↩ Download Another Video
               </button>
             </div>
-
             <VideoResult video={video} />
           </section>
         )}
