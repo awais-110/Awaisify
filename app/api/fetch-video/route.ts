@@ -324,6 +324,8 @@ const ALLOWED_DOMAINS = [
 ];
 
 export async function POST(req: NextRequest) {
+  let requestPlatform = "unknown";
+
   try {
     const body = await req.json();
     const url = body?.url?.trim();
@@ -340,6 +342,8 @@ export async function POST(req: NextRequest) {
 
     const isAllowed = ALLOWED_DOMAINS.some(d => parsedUrl.hostname.includes(d));
     if (!isAllowed) return NextResponse.json({ error: "Platform not supported" }, { status: 400 });
+
+    requestPlatform = getUrlPlatform(url);
 
     const data = isTikTokUrl(url)
       ? await fetchTikTok(url)
@@ -361,7 +365,7 @@ export async function POST(req: NextRequest) {
       status: diagnostics.status ?? status,
       data: diagnostics.data,
       stack,
-      platform: typeof url === "string" ? getUrlPlatform(url) : "unknown",
+      platform: requestPlatform,
     });
 
     return NextResponse.json({ error: message }, { status });
