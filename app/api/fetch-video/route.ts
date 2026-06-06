@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Tiktok from "@tobyg74/tiktok-api-dl";
 import { FacebookDownloadError, fetchFacebookVideo } from "@/lib/facebook-downloader";
+import { getVideoInfo, InstagramDownloadError } from "@/lib/instagram-downloader";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -103,6 +104,10 @@ function isTikTokUrl(url: string): boolean {
 
 function isFacebookUrl(url: string): boolean {
   return url.includes("facebook.com") || url.includes("fb.watch");
+}
+
+function isInstagramUrl(url: string): boolean {
+  return url.includes("instagram.com");
 }
 
 function isYouTubeUrl(url: string): boolean {
@@ -393,13 +398,15 @@ export async function POST(req: NextRequest) {
       ? await fetchTikTok(url)
       : isFacebookUrl(url)
         ? await fetchFacebookVideo(url)
+      : isInstagramUrl(url)
+        ? await getVideoInfo(url)
       : isYouTubeUrl(url)
         ? await fetchYouTube(url)
         : await fetchOther(url);
     return NextResponse.json(data);
 
   } catch (err: unknown) {
-    const status = err instanceof ApiError || err instanceof FacebookDownloadError ? err.status : 500;
+    const status = err instanceof ApiError || err instanceof FacebookDownloadError || err instanceof InstagramDownloadError ? err.status : 500;
     const message = err instanceof Error ? err.message : "Internal server error";
     const stack = err instanceof Error ? err.stack : undefined;
     const diagnostics = getErrorDiagnostics(err);
