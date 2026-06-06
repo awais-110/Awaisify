@@ -1,6 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Mail, Instagram } from "lucide-react";
+import { Mail } from "lucide-react";
 
 export const metadata = {
   title: "Contact - Awaisify Down",
@@ -23,23 +23,12 @@ export default function Contact() {
               </div>
               <div>
                 <p className="text-sm font-bold text-gray-900">Email Us</p>
-                <a href="mailto:awaiss.dev@gmail.com" className="text-sm text-blue-600 hover:underline">awaiss.dev@gmail.com</a>
+                <a href="mailto:hello.awaisify@gmail.com" className="text-sm text-blue-600 hover:underline">
+                  hello.awaisify@gmail.com
+                </a>
               </div>
             </div>
             <p className="text-xs text-gray-500">We typically respond within 24-48 hours. For DMCA requests, please include all required information.</p>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-pink-50 rounded-xl flex items-center justify-center">
-                <Instagram size={20} className="text-pink-600" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-gray-900">Instagram</p>
-                <a href="https://instagram.com/igmuhammadawais" target="_blank" rel="noopener noreferrer" className="text-sm text-pink-600 hover:underline">@igmuhammadawais</a>
-              </div>
-            </div>
-            <p className="text-xs text-gray-500">Follow us on Instagram for updates and announcements.</p>
           </div>
 
           <div className="bg-blue-50 rounded-2xl p-5">
@@ -49,7 +38,7 @@ export default function Contact() {
               <li>• Bug reports and technical issues</li>
               <li>• DMCA and copyright concerns</li>
               <li>• Business and partnership inquiries</li>
-              <li>• Subscription and billing questions</li>
+              <li>• Feature requests and feedback</li>
             </ul>
           </div>
         </div>

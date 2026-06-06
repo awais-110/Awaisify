@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Download, Play, Video, Music, FileText, ExternalLink } from "lucide-react";
 
 type Tab = "video" | "audio" | "other";
@@ -116,7 +117,7 @@ export default function VideoResult({ video, mode = "default", badges = [] }: Vi
           ) : (
             <>
               {isValidThumb ? (
-                <img src={thumbnail} alt={title} className="w-full h-full object-cover opacity-90" />
+                <Image src={thumbnail} alt={title} fill sizes="(max-width: 768px) 100vw, 768px" className="object-cover opacity-90" unoptimized />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-900">
                   <span className="text-4xl">🎬</span>

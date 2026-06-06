@@ -1,25 +1,23 @@
 import { Download, Users, ShieldCheck } from "lucide-react";
 
 const stats = [
-  { icon: <Download size={20} className="text-white" />, value: "10M+", label: "Downloads" },
-  { icon: <Users size={20} className="text-white" />, value: "500K+", label: "Users" },
-  { icon: <ShieldCheck size={20} className="text-white" />, value: "99.9%", label: "Uptime" },
+  { icon: <Download size={22} className="text-blue-600" />, bg: "bg-blue-50", value: "10M+", label: "Downloads" },
+  { icon: <Users size={22} className="text-violet-600" />, bg: "bg-violet-50", value: "500K+", label: "Users Worldwide" },
+  { icon: <ShieldCheck size={22} className="text-emerald-600" />, bg: "bg-emerald-50", value: "99.9%", label: "Uptime" },
 ];
 
 export default function Stats() {
   return (
-    <section className="mx-4 mb-12">
-      <div className="mx-auto max-w-3xl rounded-3xl bg-gradient-to-r from-blue-600 via-blue-700 to-violet-700 p-8 shadow-2xl shadow-blue-200">
-        <div className="grid grid-cols-3 divide-x divide-white/20">
+    <section className="px-4 mb-12">
+      <div className="mx-auto max-w-6xl">
+        <div className="grid grid-cols-3 gap-4">
           {stats.map((s, i) => (
-            <div key={i} className="flex flex-col items-center justify-center gap-3 px-2 py-2">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+            <div key={i} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow text-center">
+              <div className={`w-12 h-12 ${s.bg} rounded-xl flex items-center justify-center mx-auto mb-3`}>
                 {s.icon}
               </div>
-              <div className="text-center">
-                <div className="text-3xl font-black text-white">{s.value}</div>
-                <div className="text-sm text-blue-100">{s.label}</div>
-              </div>
+              <div className="text-3xl font-black text-gray-900">{s.value}</div>
+              <div className="text-sm text-gray-500 mt-1">{s.label}</div>
             </div>
           ))}
         </div>

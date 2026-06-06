@@ -1,9 +1,16 @@
+import { extraBlogs } from "@/lib/extra-blogs";
+
 export type BlogCategory = "YouTube" | "TikTok" | "Instagram" | "Tips";
 
 export interface BlogSection {
   id: string;
   heading: string;
   paragraphs: string[];
+}
+
+export interface BlogFaq {
+  question: string;
+  answer: string;
 }
 
 export interface BlogPost {
@@ -17,6 +24,7 @@ export interface BlogPost {
   author: string;
   keywords: string[];
   affiliateBanners?: Array<"4kdownloader" | "nordvpn" | "canva">;
+  faqs?: BlogFaq[];
   sections: BlogSection[];
 }
 
@@ -375,6 +383,7 @@ export const blogs: BlogPost[] = [
       },
     ],
   },
+  ...extraBlogs,
 ];
 
 export function getBlogBySlug(slug: string) {

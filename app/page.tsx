@@ -197,11 +197,8 @@ export default function Home() {
               </span>
             </div>
 
-            <h1 className="animate-slide-down mt-6 text-5xl font-black tracking-tight text-gray-900 sm:text-6xl md:text-7xl">
-              Awaisify{" "}
-              <span className="text-glow-violet bg-gradient-to-r from-blue-500 to-violet-500 bg-clip-text text-transparent">
-                Down
-              </span>
+            <h1 className="hero-title-gradient animate-slide-down mt-6 text-5xl font-black tracking-tight sm:text-6xl md:text-7xl">
+              Awaisify Down
             </h1>
 
             <p className="animate-slide-up mt-4 text-lg font-semibold text-gray-700 opacity-0">
@@ -231,8 +228,8 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="input-glow mt-8 rounded-[28px] border-2 border-blue-100 bg-white p-4 shadow-xl shadow-blue-50 transition-all duration-300 hover:border-blue-300 hover:shadow-2xl hover:shadow-blue-100">
-              <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+            <div className="input-card-premium mt-8">
+                <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
                 <div className="flex flex-1 items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 focus-within:border-blue-400 focus-within:bg-white focus-within:shadow-[0_0_0_4px_rgba(59,130,246,0.14)]">
                   <Link2 size={18} className="shrink-0 text-gray-400" />
                   <input

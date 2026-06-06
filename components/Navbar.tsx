@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronDown, Heart, Menu, Phone, X } from "lucide-react";
 
@@ -22,18 +22,42 @@ const navLinks = [
 export default function Navbar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll);
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 px-4 py-3 backdrop-blur">
+    <nav
+      className="sticky top-0 z-50 px-4 py-3 transition-all duration-300"
+      style={{
+        position: "sticky",
+        background: "rgba(255, 255, 255, 0.92)",
+        backdropFilter: isScrolled ? "blur(16px)" : "blur(12px)",
+        WebkitBackdropFilter: isScrolled ? "blur(16px)" : "blur(12px)",
+        boxShadow: isScrolled
+          ? "0 4px 24px rgba(59, 130, 246, 0.10)"
+          : "0 1px 20px rgba(59, 130, 246, 0.06), 0 1px 3px rgba(0,0,0,0.04)",
+      }}
+    >
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2 transition-transform duration-300 hover:scale-[1.02]">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
             <svg viewBox="0 0 24 24" fill="white" className="h-4 w-4">
               <polygon points="6,4 20,12 6,20" />
             </svg>
           </div>
-          <span className="whitespace-nowrap text-lg font-black tracking-tight text-gray-900">
-            Awaisify <span className="text-blue-600">Down</span>
+          <span className="group/logo whitespace-nowrap text-lg font-black tracking-tight transition-transform duration-300 hover:scale-[1.02]">
+            <span className="text-slate-950">Awaisify</span>
+            <span className="navbar-brand-down ml-1">Down</span>
           </span>
         </Link>
 
@@ -41,7 +65,7 @@ export default function Navbar() {
           <div className="relative">
             <button
               onClick={() => setIsToolsOpen((value) => !value)}
-              className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+              className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"
             >
               Tools <ChevronDown size={14} className={`transition-transform ${isToolsOpen ? "rotate-180" : ""}`} />
             </button>
@@ -65,7 +89,7 @@ export default function Navbar() {
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+              className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"
             >
               {item.label}
             </Link>
@@ -73,7 +97,7 @@ export default function Navbar() {
 
           <Link
             href="/donate"
-            className="flex items-center gap-1.5 rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-500 transition-colors hover:border-red-300 hover:bg-red-50"
+            className="flex items-center gap-1.5 rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-500 shadow-sm transition-all hover:border-red-300 hover:bg-red-50 hover:shadow-md"
           >
             <Heart size={14} /> Donate
           </Link>
@@ -121,13 +145,24 @@ export default function Navbar() {
             <Link
               href="/donate"
               onClick={() => setIsMobileOpen(false)}
-              className="flex items-center gap-2 rounded-2xl border border-red-200 px-3 py-3 text-sm font-semibold text-red-500 transition-colors hover:border-red-300 hover:bg-red-50"
+              className="flex items-center gap-2 rounded-2xl border border-red-200 px-3 py-3 text-sm font-semibold text-red-500 shadow-sm transition-all hover:border-red-300 hover:bg-red-50 hover:shadow-md"
             >
               <Heart size={15} /> Donate
             </Link>
           </div>
         </div>
       )}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: "0px",
+          background:
+            "linear-gradient(90deg, transparent 0%, #3b82f6 25%, #8b5cf6 50%, #10b981 75%, transparent 100%)",
+        }}
+      />
     </nav>
   );
 }

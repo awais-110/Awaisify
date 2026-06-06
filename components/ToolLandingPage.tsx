@@ -69,14 +69,14 @@ export default function ToolLandingPage({
       <SchemaScript data={schema} />
       <Navbar />
       <main>
-        <section className="border-b border-gray-100 bg-[radial-gradient(circle_at_top,#dbeafe_0%,#ffffff_45%,#ffffff_100%)] px-4 py-10 sm:py-14">
+        <section className="border-b border-gray-100 bg-[radial-gradient(circle_at_top,#dbeafe_0%,#ffffff_45%,#ffffff_100%)] px-4 py-8 sm:py-10">
           <div className="mx-auto max-w-6xl">
-            <div className="mb-6">
+            <div className="mb-4">
               <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-blue-600">
                 {badgeLabel}
               </span>
             </div>
-            <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
+            <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
               <div>
                 <h1 className="max-w-3xl text-4xl font-black tracking-tight text-gray-900 sm:text-5xl">
                   {title}
@@ -94,20 +94,20 @@ export default function ToolLandingPage({
                     </span>
                   ))}
                 </div>
+                <div className="mt-5 max-w-3xl">
+                  <DownloaderWidget
+                    placeholder={placeholder}
+                    helperText={helperText}
+                    invalidHostMessage={invalidHostMessage}
+                    allowedHosts={allowedHosts}
+                    mode={mode}
+                    resultBadges={resultBadges}
+                  />
+                </div>
               </div>
               <div className="space-y-4">
                 <AdBanner slot="YOUR_SLOT_1" />
               </div>
-            </div>
-            <div className="mx-auto mt-8 max-w-4xl">
-              <DownloaderWidget
-                placeholder={placeholder}
-                helperText={helperText}
-                invalidHostMessage={invalidHostMessage}
-                allowedHosts={allowedHosts}
-                mode={mode}
-                resultBadges={resultBadges}
-              />
             </div>
           </div>
         </section>

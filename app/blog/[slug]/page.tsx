@@ -90,9 +90,27 @@ export default function BlogPostPage({ params }: PageProps) {
     image: `${BASE_URL}/favicon.ico`,
   };
 
+  const schema = post.faqs && post.faqs.length > 0
+    ? [
+        articleSchema,
+        {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: post.faqs.map((faq) => ({
+            "@type": "Question",
+            name: faq.question,
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: faq.answer,
+            },
+          })),
+        },
+      ]
+    : articleSchema;
+
   return (
     <div className="min-h-screen bg-white text-gray-900">
-      <SchemaScript data={articleSchema} />
+      <SchemaScript data={schema} />
       <Navbar />
       <main className="px-4 py-10">
         <article className="mx-auto max-w-6xl">
@@ -166,6 +184,20 @@ export default function BlogPostPage({ params }: PageProps) {
                   ))}
                 </div>
               </section>
+
+              {post.faqs && post.faqs.length > 0 && (
+                <section className="mt-10">
+                  <h2 className="text-2xl font-black text-gray-900">Frequently asked questions</h2>
+                  <div className="mt-6 space-y-4">
+                    {post.faqs.map((faq) => (
+                      <div key={faq.question} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                        <h3 className="text-sm font-bold text-gray-900">{faq.question}</h3>
+                        <p className="mt-2 text-sm leading-6 text-gray-600">{faq.answer}</p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
 
             <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
