@@ -51,6 +51,42 @@ body {
   animation: gradient-shift 8s ease infinite;
 }
 
+.hero-mesh {
+  background:
+    radial-gradient(ellipse at top left, #dbeafe 0%, transparent 50%),
+    radial-gradient(ellipse at top right, #d1fae5 0%, transparent 50%),
+    radial-gradient(ellipse at bottom center, #ede9fe 0%, transparent 60%),
+    #f8fafc;
+  position: relative;
+}
+
+.hero-mesh::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, #93c5fd33 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-mesh > * {
+  position: relative;
+  z-index: 1;
+}
+
+.gradient-badge {
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(90deg, #3b82f6, #8b5cf6) border-box;
+  border: 1px solid transparent;
+  box-shadow: 0 0 0 1px transparent, inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+}
+
+.text-glow-violet {
+  text-shadow: 0 8px 26px rgba(139, 92, 246, 0.28);
+}
+
 /* ── PREMIUM ANIMATIONS ─────────────────────────── */
 
 /* Typing effect */

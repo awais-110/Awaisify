@@ -10,7 +10,7 @@ export function middleware(req: NextRequest) {
     const entry = rateLimit.get(ip);
 
     if (entry && now - entry.ts < 60_000) {
-      if (entry.count >= 15) {
+      if (entry.count >= 50) {
         return NextResponse.json(
           { error: "Too many requests. Wait a minute." },
           { status: 429 }

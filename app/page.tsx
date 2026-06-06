@@ -32,11 +32,16 @@ import { BASE_URL } from "@/lib/tool-pages";
 type Status = "idle" | "loading" | "success" | "error";
 
 const heroPlatforms = [
-  { name: "YouTube", bg: "bg-red-500", letter: "YT" },
-  { name: "TikTok", bg: "bg-black", letter: "TT" },
-  { name: "Instagram", bg: "bg-pink-500", letter: "IG" },
-  { name: "Facebook", bg: "bg-blue-600", letter: "FB" },
-  { name: "X", bg: "bg-gray-900", letter: "X" },
+  { name: "YouTube", bg: "bg-red-500", shadow: "hover:shadow-red-200", letter: "YT" },
+  { name: "TikTok", bg: "bg-gray-900", shadow: "hover:shadow-gray-300", letter: "TT" },
+  {
+    name: "Instagram",
+    bg: "bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400",
+    shadow: "hover:shadow-pink-200",
+    letter: "IG",
+  },
+  { name: "Facebook", bg: "bg-blue-600", shadow: "hover:shadow-blue-200", letter: "FB" },
+  { name: "X", bg: "bg-gray-900", shadow: "hover:shadow-gray-300", letter: "X" },
 ];
 
 const particles = [
@@ -167,7 +172,7 @@ export default function Home() {
       <Navbar />
 
       <main className="flex-1">
-        <section className="hero-gradient relative flex min-h-[420px] items-center overflow-hidden px-4 py-10">
+        <section className="hero-mesh relative flex min-h-[420px] items-center overflow-hidden px-4 py-10">
           {particles.map((particle, index) => (
             <span
               key={`${particle.left}-${index}`}
@@ -185,13 +190,18 @@ export default function Home() {
 
           <div className="relative z-10 mx-auto w-full max-w-3xl text-center">
             <div className="animate-fade-in">
-              <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-blue-600">
-                Free Video Downloader
+              <span className="gradient-badge inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em]">
+                <span className="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
+                  Free Video Downloader
+                </span>
               </span>
             </div>
 
             <h1 className="animate-slide-down mt-6 text-5xl font-black tracking-tight text-gray-900 sm:text-6xl md:text-7xl">
-              Awaisify <span className="text-blue-600">Down</span>
+              Awaisify{" "}
+              <span className="text-glow-violet bg-gradient-to-r from-blue-500 to-violet-500 bg-clip-text text-transparent">
+                Down
+              </span>
             </h1>
 
             <p className="animate-slide-up mt-4 text-lg font-semibold text-gray-700 opacity-0">
@@ -209,10 +219,10 @@ export default function Home() {
               {heroPlatforms.map((platform) => (
                 <div
                   key={platform.name}
-                  className="flex items-center gap-2 rounded-full border border-white/70 bg-white/80 px-3 py-2 shadow-sm backdrop-blur-sm"
+                  className="flex items-center gap-2 rounded-2xl border border-gray-100 bg-white/80 px-4 py-2 shadow-sm backdrop-blur transition-all duration-300 hover:border-blue-200 hover:bg-white hover:shadow-md"
                 >
                   <span
-                    className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-black text-white ${platform.bg}`}
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl text-[11px] font-black text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl ${platform.bg} ${platform.shadow}`}
                   >
                     {platform.letter}
                   </span>
@@ -221,9 +231,9 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="input-glow mt-8 rounded-[28px] border border-blue-100 bg-white/90 p-4 shadow-xl transition-all duration-300 hover:border-blue-300 hover:shadow-2xl">
-              <div className="flex items-center gap-3">
-                <div className="flex flex-1 items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 focus-within:border-blue-400 focus-within:bg-white focus-within:shadow-sm">
+            <div className="input-glow mt-8 rounded-[28px] border-2 border-blue-100 bg-white p-4 shadow-xl shadow-blue-50 transition-all duration-300 hover:border-blue-300 hover:shadow-2xl hover:shadow-blue-100">
+              <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                <div className="flex flex-1 items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 focus-within:border-blue-400 focus-within:bg-white focus-within:shadow-[0_0_0_4px_rgba(59,130,246,0.14)]">
                   <Link2 size={18} className="shrink-0 text-gray-400" />
                   <input
                     type="text"
@@ -244,7 +254,7 @@ export default function Home() {
                 <button
                   onClick={handleFetch}
                   disabled={status === "loading" || !url.trim()}
-                  className="btn-shimmer flex items-center justify-center rounded-2xl px-4 py-3 text-white shadow-sm transition-all hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="btn-shimmer flex items-center justify-center rounded-2xl px-4 py-3 text-white shadow-lg shadow-green-200 transition-all hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
                   {status === "loading" ? (
                     <Loader2 size={18} className="animate-spin" />
