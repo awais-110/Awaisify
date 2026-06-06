@@ -26,6 +26,8 @@ export class FacebookDownloadError extends Error {
 }
 
 const FACEBOOK_API_URL = (process.env.FACEBOOK_API_URL || "https://fdown.isuru.eu.org").replace(/\/+$/, "");
+const FACEBOOK_CACHE_TTL_MS = 5 * 60 * 1000;
+const facebookCache = new Map<string, { expiresAt: number; response: FacebookVideoResponse }>();
 
 function isRecord(value: unknown): value is JsonRecord {
   return typeof value === "object" && value !== null;
@@ -73,6 +75,10 @@ async function requestFacebookApi(path: "/info" | "/download", url: string): Pro
   const data = await readJsonSafe(response);
 
   if (!response.ok) {
+    if (response.status === 429) {
+      throw new FacebookDownloadError("Facebook service is busy. Please try again in 1 minute.", 429);
+    }
+
     throw new FacebookDownloadError(
       getErrorMessage(data, "Failed to fetch Facebook video. Please try a public Facebook video link."),
       response.status
@@ -107,11 +113,44 @@ function normalizeFacebookApiResponse(data: unknown, source: string): FacebookVi
   };
 }
 
+function getCachedFacebookResponse(url: string): FacebookVideoResponse | null {
+  const cached = facebookCache.get(url);
+
+  if (!cached) return null;
+
+  if (cached.expiresAt <= Date.now()) {
+    facebookCache.delete(url);
+    return null;
+  }
+
+  return {
+    ...cached.response,
+    medias: cached.response.medias.map((media) => ({ ...media })),
+  };
+}
+
+function setCachedFacebookResponse(url: string, response: FacebookVideoResponse) {
+  facebookCache.set(url, {
+    expiresAt: Date.now() + FACEBOOK_CACHE_TTL_MS,
+    response: {
+      ...response,
+      medias: response.medias.map((media) => ({ ...media })),
+    },
+  });
+}
+
 export async function fetchFacebookVideo(url: string): Promise<FacebookVideoResponse> {
+  const cached = getCachedFacebookResponse(url);
+
+  if (cached) {
+    return cached;
+  }
+
   const infoData = await requestFacebookApi("/info", url);
   const infoResult = normalizeFacebookApiResponse(infoData, url);
 
   if (infoResult) {
+    setCachedFacebookResponse(url, infoResult);
     return infoResult;
   }
 
@@ -119,6 +158,7 @@ export async function fetchFacebookVideo(url: string): Promise<FacebookVideoResp
   const downloadResult = normalizeFacebookApiResponse(downloadData, url);
 
   if (downloadResult) {
+    setCachedFacebookResponse(url, downloadResult);
     return downloadResult;
   }
 
