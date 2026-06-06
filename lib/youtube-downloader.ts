@@ -112,6 +112,11 @@ function normalizeYouTubeResponse(data: unknown, source: string): YouTubeVideoRe
     throw new YouTubeDownloadError();
   }
 
+  const duration = getNumberValue(data, ["duration"]);
+  if (duration && duration > 10 * 60) {
+    throw new YouTubeDownloadError("YouTube videos longer than 10 minutes are not supported yet.", 400, "YOUTUBE_DURATION_LIMIT");
+  }
+
   const formats = Array.isArray(data.formats) ? data.formats : [];
   const medias = formats
     .filter(isRecord)
@@ -179,6 +184,10 @@ export async function fetchYouTubeVideo(url: string): Promise<YouTubeVideoRespon
       code: diagnostics.code,
       binary: "package-provided",
     });
+
+    if (err instanceof YouTubeDownloadError) {
+      throw err;
+    }
 
     throw new YouTubeDownloadError("YouTube is temporarily unavailable on this server.", 502, diagnostics.code);
   }
