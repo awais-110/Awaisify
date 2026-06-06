@@ -246,7 +246,7 @@ export default function Home() {
               </div>
 
               <div className="mt-3 flex items-center justify-between px-1">
-                {status === "success" && <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-600"><CheckCircle2 size={14} /> Link fetched successfully</span>}
+                {status === "success" && <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-600"><CheckCircle2 size={14} /> Video ready to download</span>}
                 {status === "error" && <span className="flex items-center gap-1.5 text-xs font-medium text-red-500"><AlertCircle size={14} /> {error}</span>}
                 {(status === "idle" || status === "loading") && <span className="text-xs text-gray-400">Auto-detect platform</span>}
                 <span className="text-xs font-medium text-emerald-600">Safe • Fast • Secure</span>

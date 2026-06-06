@@ -29,16 +29,6 @@ body {
 .badge-qhd { background: #7c3aed; color: white; }
 .badge-hd  { background: #059669; color: white; }
 
-@keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.3); }
-  70% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-}
-
-.fetch-btn-animate {
-  animation: pulse-ring 2s infinite;
-}
-
 @keyframes gradient-shift {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -154,16 +144,8 @@ body {
   opacity: 0;
 }
 
-/* Shimmer on button */
-@keyframes shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-
 .btn-shimmer {
-  background: linear-gradient(90deg, #22c55e, #16a34a, #22c55e, #4ade80, #22c55e);
-  background-size: 200% auto;
-  animation: shimmer 3s linear infinite;
+  background: linear-gradient(90deg, #22c55e, #16a34a);
 }
 
 /* ── PREMIUM INPUT CARD ─────────────────────────── */

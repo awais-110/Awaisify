@@ -1,8 +1,7 @@
-import { existsSync } from "fs";
-import path from "path";
-import { create } from "youtube-dl-exec";
+import { Innertube } from "youtubei.js";
 
 type JsonRecord = Record<string, unknown>;
+type InnertubeClient = Awaited<ReturnType<typeof Innertube.create>>;
 
 interface YouTubeMediaItem {
   quality: string;
@@ -31,15 +30,15 @@ export class YouTubeDownloadError extends Error {
   }
 }
 
-const YOUTUBE_DL_BINARY_PATH = path.join(
-  process.cwd(),
-  "node_modules",
-  "youtube-dl-exec",
-  "bin",
-  process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp"
-);
+let innertubePromise: Promise<InnertubeClient> | null = null;
 
-const youtubeDl = create(YOUTUBE_DL_BINARY_PATH);
+function getInnertube(): Promise<InnertubeClient> {
+  if (!innertubePromise) {
+    innertubePromise = Innertube.create();
+  }
+
+  return innertubePromise;
+}
 
 function isRecord(value: unknown): value is JsonRecord {
   return typeof value === "object" && value !== null;
@@ -49,6 +48,7 @@ function getStringValue(record: JsonRecord, keys: string[]): string {
   for (const key of keys) {
     const value = record[key];
     if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number" && Number.isFinite(value)) return String(value);
   }
 
   return "";
@@ -58,6 +58,7 @@ function getNumberValue(record: JsonRecord, keys: string[]): number | null {
   for (const key of keys) {
     const value = record[key];
     if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) return Number(value);
   }
 
   return null;
@@ -71,40 +72,79 @@ function getErrorDiagnostics(err: unknown): { message: string; status?: unknown;
 
   return {
     message,
-    status: err.exitCode ?? err.status ?? err.code,
-    code: err.code ?? err.exitCode,
+    status: err.status ?? err.statusCode ?? err.code,
+    code: err.code ?? err.statusCode,
     stack,
   };
 }
 
-function normalizeHeight(format: JsonRecord): number | null {
+function getYouTubeVideoId(url: string): string {
+  try {
+    const parsedUrl = new URL(url);
+    const hostname = parsedUrl.hostname.toLowerCase().replace(/^www\./, "");
+
+    if (hostname === "youtu.be") {
+      const id = parsedUrl.pathname.split("/").filter(Boolean)[0];
+      if (id) return id;
+    }
+
+    if (hostname === "youtube.com" || hostname.endsWith(".youtube.com")) {
+      const watchId = parsedUrl.searchParams.get("v");
+      if (watchId) return watchId;
+
+      const parts = parsedUrl.pathname.split("/").filter(Boolean);
+      if (["shorts", "embed", "live"].includes(parts[0]) && parts[1]) return parts[1];
+    }
+  } catch {
+    throw new YouTubeDownloadError("Invalid YouTube URL", 400, "INVALID_YOUTUBE_URL");
+  }
+
+  throw new YouTubeDownloadError("Invalid YouTube URL", 400, "INVALID_YOUTUBE_URL");
+}
+
+function getHeight(format: JsonRecord): number | null {
   const height = getNumberValue(format, ["height"]);
   if (height) return height;
 
-  const quality = getStringValue(format, ["format_note", "resolution", "format"]);
+  const quality = getStringValue(format, ["quality_label", "qualityLabel", "quality"]);
   const match = quality.match(/(\d{3,4})p?/);
   return match ? Number(match[1]) : null;
 }
 
 function isProgressiveMp4(format: JsonRecord): boolean {
   const url = getStringValue(format, ["url"]);
-  const ext = getStringValue(format, ["ext"]);
-  const acodec = getStringValue(format, ["acodec"]);
-  const vcodec = getStringValue(format, ["vcodec"]);
-  const protocol = getStringValue(format, ["protocol"]);
-  const height = normalizeHeight(format);
+  const mimeType = getStringValue(format, ["mime_type", "mimeType"]);
+  const quality = getStringValue(format, ["quality_label", "qualityLabel", "quality"]);
+  const height = getHeight(format);
 
   return Boolean(
     url &&
-    ext === "mp4" &&
-    acodec &&
-    acodec !== "none" &&
-    vcodec &&
-    vcodec !== "none" &&
-    (!protocol || protocol === "https") &&
-    height &&
-    [360, 720].includes(height)
+    mimeType.includes("video/mp4") &&
+    mimeType.includes("mp4a") &&
+    quality &&
+    height
   );
+}
+
+function getThumbnail(basicInfo: JsonRecord): string {
+  const thumbnail = basicInfo.thumbnail;
+
+  if (Array.isArray(thumbnail)) {
+    const last = thumbnail.filter(isRecord).at(-1);
+    return last ? getStringValue(last, ["url"]) : "";
+  }
+
+  if (isRecord(thumbnail)) {
+    const thumbnails = thumbnail.thumbnails;
+    if (Array.isArray(thumbnails)) {
+      const last = thumbnails.filter(isRecord).at(-1);
+      return last ? getStringValue(last, ["url"]) : "";
+    }
+
+    return getStringValue(thumbnail, ["url"]);
+  }
+
+  return "";
 }
 
 function normalizeYouTubeResponse(data: unknown, source: string): YouTubeVideoResponse {
@@ -112,28 +152,38 @@ function normalizeYouTubeResponse(data: unknown, source: string): YouTubeVideoRe
     throw new YouTubeDownloadError();
   }
 
-  const duration = getNumberValue(data, ["duration"]);
+  const basicInfo = isRecord(data.basic_info) ? data.basic_info : {};
+  const streamingData = isRecord(data.streaming_data) ? data.streaming_data : {};
+  const duration = getNumberValue(basicInfo, ["duration"]);
+
   if (duration && duration > 10 * 60) {
     throw new YouTubeDownloadError("YouTube videos longer than 10 minutes are not supported yet.", 400, "YOUTUBE_DURATION_LIMIT");
   }
 
-  const formats = Array.isArray(data.formats) ? data.formats : [];
-  const medias = formats
-    .filter(isRecord)
-    .filter(isProgressiveMp4)
-    .sort((a, b) => (normalizeHeight(b) || 0) - (normalizeHeight(a) || 0))
-    .map((format): YouTubeMediaItem => {
-      const height = normalizeHeight(format) || 360;
+  const formats = Array.isArray(streamingData.formats) ? streamingData.formats.filter(isRecord) : [];
+  const preferredHeights = new Set([720, 360]);
+  const progressiveFormats = formats.filter(isProgressiveMp4);
+  const preferredFormats = progressiveFormats.filter((format) => {
+    const height = getHeight(format);
+    return Boolean(height && preferredHeights.has(height));
+  });
 
-      return {
-        quality: `${height}p`,
-        extension: "mp4",
-        url: getStringValue(format, ["url"]),
-        videoAvailable: true,
-        audioAvailable: true,
-        formattedSize: "-",
-      };
-    });
+  const selectedFormats = (preferredFormats.length ? preferredFormats : progressiveFormats)
+    .sort((a, b) => (getHeight(b) || 0) - (getHeight(a) || 0));
+
+  const medias = selectedFormats.map((format): YouTubeMediaItem => {
+    const height = getHeight(format) || 360;
+    const contentLength = getStringValue(format, ["content_length", "contentLength"]);
+
+    return {
+      quality: `${height}p`,
+      extension: "mp4",
+      url: getStringValue(format, ["url"]),
+      videoAvailable: true,
+      audioAvailable: true,
+      formattedSize: contentLength ? `${contentLength} bytes` : "-",
+    };
+  });
 
   const uniqueMedias = medias.filter((media, index, items) =>
     items.findIndex((item) => item.quality === media.quality && item.url === media.url) === index
@@ -144,8 +194,8 @@ function normalizeYouTubeResponse(data: unknown, source: string): YouTubeVideoRe
   }
 
   return {
-    title: getStringValue(data, ["title", "fulltitle"]) || "YouTube Video",
-    thumbnail: getStringValue(data, ["thumbnail"]) || "",
+    title: getStringValue(basicInfo, ["title"]) || "YouTube Video",
+    thumbnail: getThumbnail(basicInfo),
     source,
     medias: uniqueMedias,
   };
@@ -153,23 +203,13 @@ function normalizeYouTubeResponse(data: unknown, source: string): YouTubeVideoRe
 
 export async function fetchYouTubeVideo(url: string): Promise<YouTubeVideoResponse> {
   try {
-    if (!existsSync(YOUTUBE_DL_BINARY_PATH)) {
-      throw new YouTubeDownloadError("YouTube is temporarily unavailable on this server.", 502, "YTDLP_BINARY_MISSING");
-    }
-
-    const data = await youtubeDl(url, {
-      dumpSingleJson: true,
-      noWarnings: true,
-      callHome: false,
-      noCheckCertificates: true,
-      skipDownload: true,
-      format: "best[ext=mp4][height<=720][acodec!=none][vcodec!=none]/best[ext=mp4][height<=360][acodec!=none][vcodec!=none]",
-    });
+    const videoId = getYouTubeVideoId(url);
+    const innertube = await getInnertube();
+    const data = await innertube.getInfo(videoId);
 
     console.log("YOUTUBE_INFO", {
       platform: "youtube",
-      method: "youtube-dl-exec:dumpSingleJson",
-      binary: "package-provided",
+      method: "youtubei.js:getInfo",
     });
 
     return normalizeYouTubeResponse(data, url);
@@ -178,11 +218,10 @@ export async function fetchYouTubeVideo(url: string): Promise<YouTubeVideoRespon
 
     console.error("YOUTUBE_ERROR", {
       platform: "youtube",
-      method: "youtube-dl-exec",
+      method: "youtubei.js",
       message: diagnostics.message,
       status: diagnostics.status,
       code: diagnostics.code,
-      binary: "package-provided",
     });
 
     if (err instanceof YouTubeDownloadError) {

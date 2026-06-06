@@ -151,7 +151,7 @@ export default function DownloaderWidget({
           <div className="min-h-[18px]">
             {status === "success" && (
               <span className="flex items-center gap-1.5 font-medium text-emerald-600">
-                <CheckCircle2 size={14} /> Link fetched successfully
+                <CheckCircle2 size={14} /> Video ready to download
               </span>
             )}
             {status === "error" && (
