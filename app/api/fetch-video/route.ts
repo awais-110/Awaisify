@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Tiktok from "@tobyg74/tiktok-api-dl";
+import { FacebookDownloadError, fetchFacebookVideo } from "@/lib/facebook-downloader";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -19,6 +20,15 @@ interface VideoResponse {
   medias: MediaItem[];
 }
 
+interface ErrorDiagnostics {
+  response?: {
+    status?: unknown;
+    data?: unknown;
+  };
+  status?: unknown;
+  data?: unknown;
+}
+
 class ApiError extends Error {
   status: number;
   constructor(message: string, status = 500) {
@@ -31,8 +41,40 @@ function isRecord(value: unknown): value is JsonRecord {
   return typeof value === "object" && value !== null;
 }
 
+function getUrlPlatform(url: string): string {
+  try {
+    const hostname = new URL(url).hostname.replace(/^www\./, "");
+
+    if (hostname.includes("tiktok.com")) return "tiktok";
+    if (hostname.includes("facebook.com") || hostname.includes("fb.watch")) return "facebook";
+    if (hostname.includes("youtube.com") || hostname.includes("youtu.be")) return "youtube";
+    if (hostname.includes("instagram.com")) return "instagram";
+    if (hostname.includes("twitter.com") || hostname.includes("x.com")) return "x";
+    if (hostname.includes("vimeo.com")) return "vimeo";
+    if (hostname.includes("dailymotion.com")) return "dailymotion";
+
+    return "unknown";
+  } catch {
+    return "invalid";
+  }
+}
+
+function getErrorDiagnostics(err: unknown): Pick<ErrorDiagnostics, "status" | "data"> {
+  if (!isRecord(err)) return {};
+
+  const response = isRecord(err.response) ? err.response : undefined;
+  const status = response?.status ?? err.status;
+  const data = response?.data ?? err.data;
+
+  return { status, data };
+}
+
 function isTikTokUrl(url: string): boolean {
   return url.includes("tiktok.com");
+}
+
+function isFacebookUrl(url: string): boolean {
+  return url.includes("facebook.com") || url.includes("fb.watch");
 }
 
 function isYouTubeUrl(url: string): boolean {
@@ -301,14 +343,27 @@ export async function POST(req: NextRequest) {
 
     const data = isTikTokUrl(url)
       ? await fetchTikTok(url)
+      : isFacebookUrl(url)
+        ? await fetchFacebookVideo(url)
       : isYouTubeUrl(url)
         ? await fetchYouTube(url)
         : await fetchOther(url);
     return NextResponse.json(data);
 
   } catch (err: unknown) {
-    const status = err instanceof ApiError ? err.status : 500;
+    const status = err instanceof ApiError || err instanceof FacebookDownloadError ? err.status : 500;
     const message = err instanceof Error ? err.message : "Internal server error";
+    const stack = err instanceof Error ? err.stack : undefined;
+    const diagnostics = getErrorDiagnostics(err);
+
+    console.error("FETCH_VIDEO_ERROR", {
+      message,
+      status: diagnostics.status ?? status,
+      data: diagnostics.data,
+      stack,
+      platform: typeof url === "string" ? getUrlPlatform(url) : "unknown",
+    });
+
     return NextResponse.json({ error: message }, { status });
   }
 }
