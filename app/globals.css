@@ -286,3 +286,18 @@ body {
     animation: none;
   }
 }
+
+@keyframes icon-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+
+.platform-icon {
+  animation: icon-float 3s ease-in-out infinite;
+}
+
+.platform-icon:nth-child(1) { animation-delay: 0s; }
+.platform-icon:nth-child(2) { animation-delay: 0.3s; }
+.platform-icon:nth-child(3) { animation-delay: 0.6s; }
+.platform-icon:nth-child(4) { animation-delay: 0.9s; }
+.platform-icon:nth-child(5) { animation-delay: 1.2s; }

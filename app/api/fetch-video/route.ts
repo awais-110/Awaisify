@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Tiktok from "@tobyg74/tiktok-api-dl";
 import { FacebookDownloadError, fetchFacebookVideo } from "@/lib/facebook-downloader";
 import { getVideoInfo, InstagramDownloadError } from "@/lib/instagram-downloader";
+import { fetchYouTubeVideo, YouTubeDownloadError } from "@/lib/youtube-downloader";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -401,12 +402,12 @@ export async function POST(req: NextRequest) {
       : isInstagramUrl(url)
         ? await getVideoInfo(url)
       : isYouTubeUrl(url)
-        ? await fetchYouTube(url)
+        ? await fetchYouTubeVideo(url)
         : await fetchOther(url);
     return NextResponse.json(data);
 
   } catch (err: unknown) {
-    const status = err instanceof ApiError || err instanceof FacebookDownloadError || err instanceof InstagramDownloadError ? err.status : 500;
+    const status = err instanceof ApiError || err instanceof FacebookDownloadError || err instanceof InstagramDownloadError || err instanceof YouTubeDownloadError ? err.status : 500;
     const message = err instanceof Error ? err.message : "Internal server error";
     const stack = err instanceof Error ? err.stack : undefined;
     const diagnostics = getErrorDiagnostics(err);

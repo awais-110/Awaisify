@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    outputFileTracingIncludes: {
+      "/api/fetch-video": ["./node_modules/youtube-dl-exec/bin/**"],
+    },
+  },
   async headers() {
     return [
       {
