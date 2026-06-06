@@ -31,11 +31,16 @@ interface ErrorDiagnostics {
 
 class ApiError extends Error {
   status: number;
-  constructor(message: string, status = 500) {
+  data?: unknown;
+
+  constructor(message: string, status = 500, data?: unknown) {
     super(message);
     this.status = status;
+    this.data = data;
   }
 }
+
+class TikTokDownloadError extends ApiError {}
 
 function isRecord(value: unknown): value is JsonRecord {
   return typeof value === "object" && value !== null;
@@ -67,6 +72,29 @@ function getErrorDiagnostics(err: unknown): Pick<ErrorDiagnostics, "status" | "d
   const data = response?.data ?? err.data;
 
   return { status, data };
+}
+
+function getTikTokProxy(): string | undefined {
+  const proxy = process.env.TIKTOK_PROXY?.trim();
+
+  console.log("TIKTOK_PROXY_PRESENT", Boolean(proxy));
+
+  return proxy || undefined;
+}
+
+function getStatusCode(value: unknown): number | undefined {
+  return typeof value === "number" ? value : undefined;
+}
+
+function inferTikTokFailureSource(status: number | undefined, data: unknown, proxyPresent: boolean): string {
+  const text = JSON.stringify(data || "").toLowerCase();
+
+  if (!proxyPresent) return "tiktok_direct_request";
+  if (status === 407 || text.includes("proxy")) return "proxy_provider";
+  if (status === 403 || text.includes("403")) return "tiktok_or_proxy_provider_block";
+  if (text.includes("network") || text.includes("request failed")) return "tiktok_package";
+
+  return "unknown";
 }
 
 function isTikTokUrl(url: string): boolean {
@@ -192,7 +220,8 @@ function normalizeTikTokResponse(data: unknown, source: string): VideoResponse {
 
   if (data.status === "error") {
     const message = getStringValue(data, ["message"]) || "Failed to fetch TikTok video";
-    throw new ApiError(message, 502);
+    const status = message.includes("403") ? 403 : 502;
+    throw new TikTokDownloadError(message, status, data);
   }
 
   const result = data.result;
@@ -245,15 +274,30 @@ function normalizeTikTokResponse(data: unknown, source: string): VideoResponse {
 }
 
 async function fetchTikTok(url: string): Promise<VideoResponse> {
+  const proxy = getTikTokProxy();
+
   try {
-    const data = await Tiktok.Downloader(url, { version: "v1" });
+    const data = await Tiktok.Downloader(url, { version: "v1", proxy });
     return normalizeTikTokResponse(data, url);
   } catch (err: unknown) {
-    if (err instanceof ApiError) throw err;
-
     const message = err instanceof Error && err.message
       ? err.message
       : "Failed to fetch TikTok video";
+    const stack = err instanceof Error ? err.stack : undefined;
+    const diagnostics = getErrorDiagnostics(err);
+    const status = getStatusCode(diagnostics.status) ?? (err instanceof ApiError ? err.status : 502);
+    const data = diagnostics.data;
+
+    console.error("TIKTOK_ERROR", {
+      platform: "tiktok",
+      message,
+      status,
+      data,
+      stack,
+      source: inferTikTokFailureSource(status, data, Boolean(proxy)),
+    });
+
+    if (err instanceof ApiError) throw err;
 
     throw new ApiError(message, 502);
   }
