@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import Tiktok from "@tobyg74/tiktok-api-dl";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -30,6 +31,10 @@ function isRecord(value: unknown): value is JsonRecord {
   return typeof value === "object" && value !== null;
 }
 
+function isTikTokUrl(url: string): boolean {
+  return url.includes("tiktok.com");
+}
+
 function isYouTubeUrl(url: string): boolean {
   return url.includes("youtube.com") || url.includes("youtu.be");
 }
@@ -52,6 +57,17 @@ function getStringValue(record: JsonRecord, keys: string[]): string {
     if (typeof value === "string" && value.trim()) return value.trim();
   }
   return "";
+}
+
+function getStringArray(record: JsonRecord, keys: string[]): string[] {
+  for (const key of keys) {
+    const value = record[key];
+    if (Array.isArray(value)) {
+      return value.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+    }
+    if (typeof value === "string" && value.trim()) return [value.trim()];
+  }
+  return [];
 }
 
 function getMediaUrl(media: unknown): string {
@@ -105,6 +121,100 @@ function normalizeResponse(data: unknown, url: string): VideoResponse {
   }
 
   return { title, thumbnail, source, medias };
+}
+
+function addTikTokMedia(
+  medias: MediaItem[],
+  urls: string[],
+  quality: string,
+  extension: string,
+  videoAvailable: boolean,
+  audioAvailable: boolean
+) {
+  for (const url of urls) {
+    if (!url || medias.some((media) => media.url === url)) continue;
+
+    medias.push({
+      quality,
+      extension,
+      url,
+      videoAvailable,
+      audioAvailable,
+      formattedSize: "-",
+    });
+  }
+}
+
+function normalizeTikTokResponse(data: unknown, source: string): VideoResponse {
+  if (!isRecord(data)) throw new ApiError("Failed to read TikTok video info", 502);
+
+  if (data.status === "error") {
+    const message = getStringValue(data, ["message"]) || "Failed to fetch TikTok video";
+    throw new ApiError(message, 502);
+  }
+
+  const result = data.result;
+  if (!isRecord(result)) throw new ApiError("No TikTok video data found", 404);
+
+  const video = isRecord(result.video) ? result.video : {};
+  const music = isRecord(result.music) ? result.music : {};
+  const medias: MediaItem[] = [];
+
+  addTikTokMedia(
+    medias,
+    getStringArray(video, ["playAddr", "playUrl", "url"]),
+    "No watermark",
+    "mp4",
+    true,
+    true
+  );
+
+  addTikTokMedia(
+    medias,
+    getStringArray(video, ["downloadAddr", "downloadUrl"]),
+    "Original",
+    "mp4",
+    true,
+    true
+  );
+
+  addTikTokMedia(
+    medias,
+    getStringArray(music, ["playUrl", "url"]),
+    "Music / Audio",
+    "mp3",
+    false,
+    true
+  );
+
+  if (!medias.length) throw new ApiError("No downloadable TikTok media found", 404);
+
+  const thumbnail =
+    getStringArray(video, ["cover", "originCover", "dynamicCover"])[0] ||
+    getStringArray(music, ["coverLarge", "coverMedium", "coverThumb"])[0] ||
+    "";
+
+  return {
+    title: getStringValue(result, ["desc", "title"]) || getStringValue(music, ["title"]) || "TikTok Video",
+    thumbnail,
+    source,
+    medias,
+  };
+}
+
+async function fetchTikTok(url: string): Promise<VideoResponse> {
+  try {
+    const data = await Tiktok.Downloader(url, { version: "v1" });
+    return normalizeTikTokResponse(data, url);
+  } catch (err: unknown) {
+    if (err instanceof ApiError) throw err;
+
+    const message = err instanceof Error && err.message
+      ? err.message
+      : "Failed to fetch TikTok video";
+
+    throw new ApiError(message, 502);
+  }
 }
 
 async function fetchYouTube(url: string): Promise<VideoResponse> {
@@ -189,7 +299,11 @@ export async function POST(req: NextRequest) {
     const isAllowed = ALLOWED_DOMAINS.some(d => parsedUrl.hostname.includes(d));
     if (!isAllowed) return NextResponse.json({ error: "Platform not supported" }, { status: 400 });
 
-    const data = isYouTubeUrl(url) ? await fetchYouTube(url) : await fetchOther(url);
+    const data = isTikTokUrl(url)
+      ? await fetchTikTok(url)
+      : isYouTubeUrl(url)
+        ? await fetchYouTube(url)
+        : await fetchOther(url);
     return NextResponse.json(data);
 
   } catch (err: unknown) {
