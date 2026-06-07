@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdBanner from "@/components/AdBanner";
@@ -24,6 +25,7 @@ export function generateMetadata({ params }: PageProps): Metadata {
   if (!post) {
     return {};
   }
+  const imageUrl = post.heroImage ? `${BASE_URL}${post.heroImage.src}` : `${BASE_URL}/favicon.ico`;
 
   return {
     title: `${post.title} | Awaisify Down`,
@@ -36,7 +38,7 @@ export function generateMetadata({ params }: PageProps): Metadata {
       title: `${post.title} | Awaisify Down`,
       description: post.description,
       url: `${BASE_URL}/blog/${post.slug}`,
-      images: [`${BASE_URL}/favicon.ico`],
+      images: [imageUrl],
       type: "article",
     },
   };
@@ -71,13 +73,15 @@ export default function BlogPostPage({ params }: PageProps) {
     })
     .slice(0, 3);
   const midIndex = Math.floor(post.sections.length / 2);
+  const schemaImage = post.heroImage ? `${BASE_URL}${post.heroImage.src}` : `${BASE_URL}/favicon.ico`;
 
   const articleSchema = {
     "@context": "https://schema.org",
-    "@type": "Article",
+    "@type": "BlogPosting",
     headline: post.title,
     description: post.description,
     datePublished: post.date,
+    dateModified: post.date,
     author: {
       "@type": "Organization",
       name: post.author,
@@ -85,9 +89,14 @@ export default function BlogPostPage({ params }: PageProps) {
     publisher: {
       "@type": "Organization",
       name: "Awaisify Down",
+      logo: {
+        "@type": "ImageObject",
+        url: `${BASE_URL}/favicon.ico`,
+      },
     },
     mainEntityOfPage: `${BASE_URL}/blog/${post.slug}`,
-    image: `${BASE_URL}/favicon.ico`,
+    image: schemaImage,
+    keywords: post.keywords.join(", "),
   };
 
   const schema = post.faqs && post.faqs.length > 0
@@ -126,7 +135,29 @@ export default function BlogPostPage({ params }: PageProps) {
                 <h1 className="mt-5 text-4xl font-black tracking-tight text-gray-900">{post.title}</h1>
                 <p className="mt-4 max-w-3xl text-base leading-7 text-gray-600">{post.description}</p>
 
+          {post.heroImage && (
+  <figure className="my-8 overflow-hidden rounded-3xl border border-gray-200 bg-gray-50 shadow-sm sm:mx-auto max-w-[300px]">
+    <Image
+      src={post.heroImage.src}
+      width={post.heroImage.width}
+      height={post.heroImage.height}
+      alt={post.heroImage.alt}
+      loading="lazy"
+      sizes="300px"
+      className="h-auto w-full"
+    />
+    <figcaption className="border-t border-gray-200 px-4 py-3 text-sm text-gray-500">
+      {post.heroImage.caption}
+    </figcaption>
+  </figure>
+)}
+
                 <div className="mt-6 flex flex-wrap gap-3">
+                  {post.cta && (
+                    <Link href={post.cta.href} className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-700">
+                      {post.cta.label}
+                    </Link>
+                  )}
                   <Link href={shareLinks.twitter} target="_blank" rel="noopener noreferrer" className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:border-blue-200 hover:text-blue-600">
                     Share on Twitter
                   </Link>
@@ -137,6 +168,16 @@ export default function BlogPostPage({ params }: PageProps) {
                     Share on WhatsApp
                   </Link>
                 </div>
+
+                {post.tags && post.tags.length > 0 && (
+                  <div className="mt-6 flex flex-wrap gap-2">
+                    {post.tags.map((tag) => (
+                      <span key={tag} className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="mt-8 space-y-8">
@@ -149,6 +190,31 @@ export default function BlogPostPage({ params }: PageProps) {
                           <p key={`${section.id}-${paragraphIndex}`}>{paragraph}</p>
                         ))}
                       </div>
+                      {section.bullets && section.bullets.length > 0 && (
+                        <ul className="mt-5 grid gap-3 text-sm font-medium text-gray-700 sm:grid-cols-2">
+                          {section.bullets.map((bullet) => (
+                            <li key={bullet} className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
+                              {bullet}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {section.image && (
+                        <figure className="my-8 overflow-hidden rounded-3xl border border-gray-200 bg-gray-50 shadow-sm sm:mx-auto max-w-[300px]">
+  <Image
+    src={section.image.src}
+    width={section.image.width}
+    height={section.image.height}
+    alt={section.image.alt}
+    loading="lazy"
+    sizes="300px"
+    className="h-auto w-full"
+  />
+  <figcaption className="border-t border-gray-200 px-4 py-3 text-sm text-gray-500">
+    {section.image.caption}
+  </figcaption>
+</figure>
+                      )}
                     </section>
 
                     {index === 0 && post.affiliateBanners && post.affiliateBanners.length > 0 && (
@@ -198,6 +264,18 @@ export default function BlogPostPage({ params }: PageProps) {
                   </div>
                 </section>
               )}
+
+              {post.cta && (
+                <section className="mt-10 rounded-3xl border border-blue-100 bg-blue-50 p-6 shadow-sm sm:p-8">
+                  <h2 className="text-2xl font-black text-gray-900">Ready to save your Reel?</h2>
+                  <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-600">
+                    Open the Instagram downloader, paste your public Reel link, and download it from your browser.
+                  </p>
+                  <Link href={post.cta.href} className="mt-5 inline-flex rounded-full bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-700">
+                    {post.cta.label}
+                  </Link>
+                </section>
+              )}
             </div>
 
             <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
@@ -223,6 +301,12 @@ export default function BlogPostPage({ params }: PageProps) {
               <div className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
                 <h2 className="text-lg font-black text-gray-900">More from Awaisify Down</h2>
                 <div className="mt-4 space-y-3">
+                  <Link href="/" className="block text-sm font-semibold text-gray-700 hover:text-blue-600">
+                    Homepage
+                  </Link>
+                  <Link href="/instagram-downloader" className="block text-sm font-semibold text-gray-700 hover:text-blue-600">
+                    Instagram Downloader
+                  </Link>
                   <Link href="/youtube-downloader" className="block text-sm font-semibold text-gray-700 hover:text-blue-600">
                     YouTube Downloader
                   </Link>

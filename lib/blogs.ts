@@ -6,6 +6,14 @@ export interface BlogSection {
   id: string;
   heading: string;
   paragraphs: string[];
+  bullets?: string[];
+  image?: {
+    src: string;
+    width: number;
+    height: number;
+    alt: string;
+    caption: string;
+  };
 }
 
 export interface BlogFaq {
@@ -23,6 +31,18 @@ export interface BlogPost {
   category: BlogCategory;
   author: string;
   keywords: string[];
+  tags?: string[];
+  cta?: {
+    label: string;
+    href: string;
+  };
+  heroImage?: {
+    src: string;
+    width: number;
+    height: number;
+    alt: string;
+    caption: string;
+  };
   affiliateBanners?: Array<"4kdownloader" | "nordvpn" | "canva">;
   faqs?: BlogFaq[];
   sections: BlogSection[];
@@ -31,6 +51,235 @@ export interface BlogPost {
 export const blogCategories: Array<"All" | BlogCategory> = ["All", "YouTube", "TikTok", "Instagram", "Tips"];
 
 export const blogs: BlogPost[] = [
+  {
+    slug: "how-to-download-instagram-reels-online-free-2026",
+    title: "How to Download Instagram Reels Online for Free in 2026",
+    description: "Learn how to download Instagram Reels online for free using Awaisify Down. Fast, secure, mobile-friendly, and no registration required.",
+    excerpt: "A step-by-step 2026 guide to downloading public Instagram Reels online for free with Awaisify Down.",
+    date: "2026-06-07",
+    readTime: "9 min read",
+    category: "Instagram",
+    author: "Awaisify Team",
+    keywords: [
+      "download instagram reels online free",
+      "instagram reels downloader 2026",
+      "free instagram reels downloader",
+      "Awaisify Down",
+      "online video downloader",
+    ],
+    tags: [
+      "Instagram Downloader",
+      "Instagram Reels Downloader",
+      "Video Downloader",
+      "Online Downloader",
+      "Awaisify Down",
+      "Social Media Tools",
+    ],
+    cta: {
+      label: "Download Instagram Reels Now",
+      href: "/instagram-downloader",
+    },
+    heroImage: {
+      src: "/blog/awaisify-down-homepage.webp",
+      width: 720,
+      height: 1600,
+      alt: "Awaisify Down homepage with the video downloader input box",
+      caption: "Awaisify Down gives you a clean browser input for public Instagram Reel links.",
+    },
+    faqs: [
+      {
+        question: "Is Awaisify Down free?",
+        answer: "Yes, Awaisify Down is free to use for downloading public Instagram Reels and other supported video links.",
+      },
+      {
+        question: "Do I need to install an app?",
+        answer: "No, you can use Awaisify Down directly from your browser without installing an app or extension.",
+      },
+      {
+        question: "Can I use it on mobile?",
+        answer: "Yes, Awaisify Down works on mobile phones, tablets, laptops, and desktop computers.",
+      },
+      {
+        question: "Why is my Instagram Reel not downloading?",
+        answer: "The link may be invalid, private, restricted, removed, or temporarily unavailable. Copy the link again and make sure the Reel is public.",
+      },
+      {
+        question: "Does Awaisify Down support other platforms?",
+        answer: "Yes, Awaisify Down is designed to support multiple platforms such as Instagram, TikTok, Facebook, YouTube, and more.",
+      },
+    ],
+    sections: [
+      {
+        id: "introduction",
+        heading: "Download Instagram Reels online in a few simple steps",
+        paragraphs: [
+          "Instagram Reels are one of the most popular short-video formats today. People use Reels for entertainment, learning, tutorials, business ideas, recipes, travel clips, and creative inspiration.",
+          "Sometimes, you may want to save a Reel so you can watch it later without searching for it again. Awaisify Down makes this process simple, fast, and easy on both mobile and desktop.",
+          "In this guide, you will learn how to download Instagram Reels online for free using Awaisify Down.",
+        ],
+      },
+      {
+        id: "why-use-online-instagram-reels-downloader",
+        heading: "Why use an online Instagram Reels downloader?",
+        paragraphs: [
+          "An online Instagram Reels downloader helps you save videos quickly without installing extra apps. This is useful when you want a simple browser-based solution that works from the device you already have in your hand.",
+          "With Awaisify Down, you can download Instagram Reels online, use the tool directly from your browser, save videos on mobile or desktop, avoid extra software, and download public videos without registration.",
+        ],
+        bullets: [
+          "Download Instagram Reels online",
+          "Use the tool directly from your browser",
+          "Save videos on mobile or desktop",
+          "Avoid installing extra software",
+          "Use a simple and clean interface",
+          "Download videos without registration",
+        ],
+      },
+      {
+        id: "what-you-need-before-starting",
+        heading: "What you need before starting",
+        paragraphs: [
+          "Before downloading an Instagram Reel, you only need a working internet connection, the Instagram Reel link, a phone or computer, and access to Awaisify Down.",
+          "No account signup is required on Awaisify Down, which keeps the process fast and lightweight.",
+        ],
+        bullets: [
+          "A working internet connection",
+          "The Instagram Reel link",
+          "A mobile phone, tablet, laptop, or desktop",
+          "Access to Awaisify Down",
+        ],
+      },
+      {
+        id: "step-1-open-instagram-reel",
+        heading: "Step 1: Open Instagram and find the Reel",
+        paragraphs: [
+          "Open Instagram and choose the Reel you want to save. Make sure the Reel is public and accessible so the downloader can fetch the available video file.",
+        ],
+        image: {
+          src: "/blog/instagram-reel-opened.webp",
+          width: 720,
+          height: 1600,
+          alt: "Instagram Reel screen with the share icon highlighted",
+          caption: "Opening the Instagram Reel you want to download.",
+        },
+      },
+      {
+        id: "step-2-copy-instagram-reel-link",
+        heading: "Step 2: Copy the Instagram Reel link",
+        paragraphs: [
+          "Tap the share icon on the Reel and select the copy link option. This copies the Reel URL to your clipboard so you can paste it into the downloader.",
+        ],
+        image: {
+          src: "/blog/instagram-copy-link.webp",
+          width: 720,
+          height: 1600,
+          alt: "Instagram share menu showing the copied link option",
+          caption: "Copying the Instagram Reel link from the share menu.",
+        },
+      },
+      {
+        id: "step-3-open-awaisify-down",
+        heading: "Step 3: Open Awaisify Down",
+        paragraphs: [
+          "Now open your browser and visit Awaisify Down at https://awaisify.site. You can also go straight to the Instagram Downloader page if you want a dedicated Instagram Reels workflow.",
+        ],
+        image: {
+          src: "/blog/awaisify-down-homepage.webp",
+          width: 720,
+          height: 1600,
+          alt: "Awaisify Down homepage showing the video downloader input box",
+          caption: "Awaisify Down homepage with the video downloader input box.",
+        },
+      },
+      {
+        id: "step-4-paste-reel-url",
+        heading: "Step 4: Paste the Reel URL",
+        paragraphs: [
+          "Paste the copied Instagram Reel link into the downloader input box. Check that the URL is complete before starting the download request.",
+        ],
+        image: {
+          src: "/blog/instagram-url-pasted.webp",
+          width: 720,
+          height: 1600,
+          alt: "Instagram Reel URL pasted into the Awaisify Down input field",
+          caption: "Pasting the Instagram Reel URL into Awaisify Down.",
+        },
+      },
+      {
+        id: "step-5-click-download-button",
+        heading: "Step 5: Click the Download button",
+        paragraphs: [
+          "After pasting the link, click the download button and wait for the tool to process the video. Awaisify Down will check the public link and prepare the available download option.",
+        ],
+        image: {
+          src: "/blog/instagram-download-process.webp",
+          width: 720,
+          height: 1600,
+          alt: "Awaisify Down processing screen after clicking the download button",
+          caption: "Processing the Instagram Reel download request.",
+        },
+      },
+      {
+        id: "step-6-save-video",
+        heading: "Step 6: Save the video",
+        paragraphs: [
+          "Once the result appears, choose the available download option and save the video to your device. On mobile, your browser may show a download notification or save the file in your Downloads folder.",
+        ],
+        image: {
+          src: "/blog/instagram-download-result.webp",
+          width: 720,
+          height: 1600,
+          alt: "Awaisify Down Instagram video result with the download button",
+          caption: "Choosing the available download option after the Instagram Reel result appears.",
+        },
+      },
+      {
+        id: "key-features-of-awaisify-down",
+        heading: "Key features of Awaisify Down",
+        paragraphs: [
+          "Awaisify Down is built for quick public video downloads without unnecessary setup. It is free to use, does not require registration, works smoothly on mobile and desktop, and keeps the interface simple enough for anyone to paste a link and download a video.",
+          "The site is also designed to support multiple popular platforms, including Instagram, TikTok, Facebook, YouTube, and more.",
+        ],
+        bullets: [
+          "Free to use from any modern browser",
+          "No registration or sign-in required",
+          "Mobile-friendly layout for phones and tablets",
+          "Simple interface with a clear input and download button",
+          "Support for multiple social video platforms",
+        ],
+      },
+      {
+        id: "tips-for-better-downloading",
+        heading: "Tips for better downloading",
+        paragraphs: [
+          "For the best experience, start with a valid public Instagram Reel link and a stable internet connection. Private, restricted, or removed content may not return a downloadable result.",
+          "If a video takes too long to process, refresh the page, copy the link again, and try once more in the latest version of your browser.",
+        ],
+        bullets: [
+          "Use a valid Instagram Reel link",
+          "Make sure your internet connection is stable",
+          "Avoid private or restricted content",
+          "Refresh the page if the video takes too long to process",
+          "Use the latest version of your browser",
+        ],
+      },
+      {
+        id: "is-it-safe-to-use-awaisify-down",
+        heading: "Is it safe to use Awaisify Down?",
+        paragraphs: [
+          "Awaisify Down is browser-based and does not require installation. You only paste a video link and use the downloader directly from the website.",
+          "For safety, always avoid downloading private content without permission and only use saved videos responsibly. Public video download tools are most useful for personal viewing, education, research, and internal reference workflows.",
+        ],
+      },
+      {
+        id: "final-thoughts",
+        heading: "Final thoughts",
+        paragraphs: [
+          "Downloading Instagram Reels online is simple with Awaisify Down. Copy the Reel link, paste it into the downloader, click download, and save your video in a few seconds.",
+          "If you want a fast and simple Instagram Reels downloader, Awaisify Down is a useful tool to try.",
+        ],
+      },
+    ],
+  },
   {
     slug: "how-to-download-youtube-videos-2026",
     title: "How to Download YouTube Videos in 2026 — Complete Guide",
