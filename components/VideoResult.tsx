@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Download, Play, Video, Music, FileText, ExternalLink } from "lucide-react";
 
@@ -78,6 +78,7 @@ function titleFromSource(source?: string) {
 export default function VideoResult({ video, mode = "default", badges = [] }: VideoResultProps) {
   const [tab, setTab] = useState<Tab>(mode === "audio-only" ? "audio" : "video");
   const [playing, setPlaying] = useState(false);
+  const [thumbnailFailed, setThumbnailFailed] = useState(false);
   const medias = video.medias || [];
   const videoFormats = medias.filter((m) => m.extension === "mp4" || m.videoAvailable);
   const audioFormats = medias.filter((m) => m.extension === "mp3" || (m.audioAvailable && !m.videoAvailable));
@@ -96,6 +97,10 @@ export default function VideoResult({ video, mode = "default", badges = [] }: Vi
   const previewUrl = videoFormats[0]?.url || "";
   const rawDesc = video.description || title;
   const description = rawDesc.length > 80 ? rawDesc.slice(0, 80) + "..." : rawDesc;
+
+  useEffect(() => {
+    setThumbnailFailed(false);
+  }, [thumbnail]);
 
   function getDownloadHref(row: any) {
     const params = new URLSearchParams({
@@ -116,8 +121,10 @@ export default function VideoResult({ video, mode = "default", badges = [] }: Vi
             <video src={previewUrl} autoPlay controls className="w-full h-full object-cover" />
           ) : (
             <>
-              {isValidThumb ? (
-                <Image src={thumbnail} alt={title} fill sizes="(max-width: 768px) 100vw, 768px" className="object-cover opacity-90" unoptimized />
+              {isValidThumb && !thumbnailFailed ? (
+                <Image src={thumbnail} alt={title} fill sizes="(max-width: 768px) 100vw, 768px" className="object-cover opacity-90" unoptimized onError={() => setThumbnailFailed(true)} />
+              ) : previewUrl && mode !== "audio-only" ? (
+                <video src={previewUrl} muted playsInline preload="metadata" className="w-full h-full object-cover opacity-90" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-900">
                   <span className="text-4xl">🎬</span>
