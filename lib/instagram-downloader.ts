@@ -43,6 +43,13 @@ const INSTAGRAM_HEADERS = {
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0",
 };
 
+const INSTAGRAM_MEDIA_HEADERS = {
+  "Accept": "video/mp4,video/*,*/*;q=0.8",
+  "Referer": "https://www.instagram.com/",
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0",
+};
+
 function encodeGraphqlRequestData(shortcode: string): string {
   return new URLSearchParams({
     av: "0",
@@ -271,6 +278,63 @@ function findVideoUrl(value: unknown): string {
   return "";
 }
 
+function findDashVideoUrl(value: unknown): string {
+  if (!isRecord(value)) return "";
+
+  const dashInfo = value.dash_info;
+  if (isRecord(dashInfo)) {
+    const manifest = getStringValue(dashInfo, ["video_dash_manifest"]);
+    const match = manifest.match(/<Representation\b[^>]*mimeType="video\/mp4"[\s\S]*?<BaseURL>([\s\S]*?)<\/BaseURL>/);
+    if (match?.[1]) return decodeHtml(match[1]);
+  }
+
+  const media = value.media;
+  if (isRecord(media)) {
+    const mediaUrl = findDashVideoUrl(media);
+    if (mediaUrl) return mediaUrl;
+  }
+
+  const shortcodeMedia = value.shortcode_media;
+  if (isRecord(shortcodeMedia)) {
+    const shortcodeMediaUrl = findDashVideoUrl(shortcodeMedia);
+    if (shortcodeMediaUrl) return shortcodeMediaUrl;
+  }
+
+  const graphql = value.graphql;
+  if (isRecord(graphql)) {
+    const graphqlUrl = findDashVideoUrl(graphql);
+    if (graphqlUrl) return graphqlUrl;
+  }
+
+  return "";
+}
+
+async function isDownloadableVideoUrl(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url, {
+      headers: {
+        ...INSTAGRAM_MEDIA_HEADERS,
+        "Range": "bytes=0-0",
+      },
+      cache: "no-store",
+    });
+
+    return response.ok && (response.headers.get("content-type") || "").toLowerCase().startsWith("video/");
+  } catch {
+    return false;
+  }
+}
+
+async function findDownloadableVideoUrl(value: unknown): Promise<string> {
+  const candidates = [findVideoUrl(value), findDashVideoUrl(value)].filter(Boolean);
+
+  for (const candidate of candidates) {
+    if (await isDownloadableVideoUrl(candidate)) return candidate;
+  }
+
+  return "";
+}
+
 function findThumbnail(value: unknown): string {
   if (!isRecord(value)) return "";
 
@@ -298,13 +362,13 @@ function findThumbnail(value: unknown): string {
   return "";
 }
 
-export function formatGraphqlJson(data: unknown, source: string): InstagramVideoResponse | null {
+export async function formatGraphqlJson(data: unknown, source: string): Promise<InstagramVideoResponse | null> {
   const root = isRecord(data) && isRecord(data.data) ? data.data : {};
   const mediaData = isRecord(root.xdt_shortcode_media) ? root.xdt_shortcode_media : data;
 
   console.log("INSTAGRAM_GRAPHQL_HAS_MEDIA", isRecord(root.xdt_shortcode_media));
 
-  const videoUrl = findVideoUrl(mediaData);
+  const videoUrl = await findDownloadableVideoUrl(mediaData);
   console.log("INSTAGRAM_GRAPHQL_VIDEO_URL_EXISTS", Boolean(videoUrl));
 
   if (!videoUrl) return null;
@@ -341,7 +405,7 @@ export async function getVideoInfo(url: string): Promise<InstagramVideoResponse>
 
   try {
     const graphqlData = await getPostGraphqlData(shortcode);
-    const graphqlResult = formatGraphqlJson(graphqlData, url);
+    const graphqlResult = await formatGraphqlJson(graphqlData, url);
 
     if (graphqlResult) return graphqlResult;
   } catch (err: unknown) {

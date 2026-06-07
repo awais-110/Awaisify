@@ -44,6 +44,15 @@ function contentDisposition(filename: string) {
   return `attachment; filename="${asciiName || "download.mp4"}"; filename*=UTF-8''${encodeURIComponent(filename)}`;
 }
 
+function isInstagramMediaUrl(url: string) {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    return hostname.includes("cdninstagram.com") || hostname.endsWith("fbcdn.net");
+  } catch {
+    return false;
+  }
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const url = searchParams.get("url");
@@ -57,22 +66,40 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    const isInstagram = isInstagramMediaUrl(url);
+    const headers: HeadersInit = {
+      "Accept": "*/*",
+      "User-Agent": isInstagram
+        ? "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0"
+        : "Mozilla/5.0 AwaisifyDown/1.0",
+    };
+
+    if (isInstagram) {
+      headers.Referer = "https://www.instagram.com/";
+    }
+
     const response = await fetch(url, {
       cache: "no-store",
-      headers: {
-        "Accept": "*/*",
-        "User-Agent": "Mozilla/5.0 AwaisifyDown/1.0",
-      },
+      headers,
     });
 
     if (!response.ok || !response.body) {
       const text = await response.text().catch(() => "");
       console.error("Download upstream failed:", response.status, text.slice(0, 300));
+      if (isInstagram) {
+        return NextResponse.redirect(url);
+      }
+
       return NextResponse.json({ error: "Download failed" }, { status: 502 });
     }
 
     const contentType = response.headers.get("content-type") || "video/mp4";
     const buffer = await response.arrayBuffer();
+
+    if (isInstagram && !contentType.toLowerCase().startsWith("video/")) {
+      console.error("Instagram download returned non-video content:", contentType);
+      return NextResponse.redirect(url);
+    }
 
     return new NextResponse(buffer, {
       headers: {

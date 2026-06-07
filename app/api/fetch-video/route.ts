@@ -4,6 +4,9 @@ import { FacebookDownloadError, fetchFacebookVideo } from "@/lib/facebook-downlo
 import { getVideoInfo, InstagramDownloadError } from "@/lib/instagram-downloader";
 import { fetchYouTubeVideo, YouTubeDownloadError } from "@/lib/youtube-downloader";
 
+export const runtime = "nodejs";
+export const maxDuration = 30;
+
 type JsonRecord = Record<string, unknown>;
 
 interface MediaItem {
@@ -402,7 +405,13 @@ export async function POST(req: NextRequest) {
       : isInstagramUrl(url)
         ? await getVideoInfo(url)
       : isYouTubeUrl(url)
-        ? await fetchYouTubeVideo(url)
+        ? await fetchYouTubeVideo(url).catch((err) => {
+          if (err instanceof YouTubeDownloadError && process.env.RAPIDAPI_KEY) {
+            return fetchYouTube(url);
+          }
+
+          throw err;
+        })
         : await fetchOther(url);
     return NextResponse.json(data);
 
