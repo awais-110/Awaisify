@@ -174,41 +174,29 @@ export default function Home() {
           ))}
 
           <div className="relative z-10 mx-auto w-full max-w-3xl text-center">
-            {/* Badge */}
             <div className="animate-fade-in">
               <span className="gradient-badge inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em]">
                 <span className="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">Free Video Downloader</span>
               </span>
             </div>
 
-            {/* Heading */}
+   {/* Heading */}
             <h1 className="animate-slide-down mt-5 text-5xl font-black tracking-tight text-gray-900 sm:text-6xl md:text-7xl">
               Awaisify{" "}
               <span className="bg-gradient-to-r from-blue-500 to-violet-500 bg-clip-text text-transparent text-glow-violet">Down</span>
-            </h1>
+            </h1>     <p className="animate-slide-up mt-4 text-lg font-semibold text-gray-700 opacity-0">Paste any link. Download in seconds.</p>
+            <p className="animate-fade-in mt-2 text-sm text-gray-500">YouTube, TikTok, Instagram, Facebook, X and more.</p>
 
-            <p className="animate-slide-up mt-4 text-lg font-semibold text-gray-700 opacity-0">Paste link. Download video.</p>
-            <p className="animate-fade-in mt-2 text-sm text-gray-500">Supports YouTube, TikTok, Instagram, Facebook, X and more public video links.</p>
-
-            {/* Platform Icons — premium floating */}
             <div
               className="mt-8 flex flex-wrap items-center justify-center gap-5"
               style={{ animation: "fadeIn 0.7s ease 0.5s forwards", opacity: 0 }}
             >
               {platformIcons.map((platform, i) => (
-                <div
-                  key={platform.name}
-                  title={platform.name}
-                  className="platform-icon group relative"
-                  style={{ animationDelay: `${i * 0.15}s` }}
-                >
-                  {/* Glow behind icon */}
+                <div key={platform.name} title={platform.name} className="platform-icon group relative" style={{ animationDelay: `${i * 0.15}s` }}>
                   <div className={`absolute inset-0 rounded-2xl opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-50 ${platform.bg}`} />
-                  {/* Icon itself */}
                   <div className={`relative flex h-14 w-14 items-center justify-center rounded-2xl shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-1 group-hover:shadow-2xl ${platform.bg}`}>
                     {platform.svg}
                   </div>
-                  {/* Tooltip */}
                   <div className="pointer-events-none absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-gray-900/80 px-2 py-0.5 text-[10px] font-semibold text-white opacity-0 backdrop-blur transition-opacity duration-200 group-hover:opacity-100">
                     {platform.name}
                   </div>
@@ -216,8 +204,17 @@ export default function Home() {
               ))}
             </div>
 
+            {/* Trust Badges */}
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+              {["100% Free", "No Signup Required", "HD Quality", "Safe & Secure"].map((badge) => (
+                <span key={badge} className="text-xs font-semibold text-gray-500 bg-white/80 border border-gray-200 px-3 py-1 rounded-full shadow-sm backdrop-blur-sm">
+                  ✓ {badge}
+                </span>
+              ))}
+            </div>
+
             {/* Input Card */}
-            <div className="input-card-premium mt-10">
+            <div className="input-card-premium mt-6">
               <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
                 <div className="flex flex-1 items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 focus-within:border-blue-400 focus-within:bg-white focus-within:shadow-[0_0_0_4px_rgba(59,130,246,0.14)]">
                   <Link2 size={18} className="shrink-0 text-gray-400" />
@@ -225,7 +222,7 @@ export default function Home() {
                     type="text" value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleFetch()}
-                    placeholder="Paste video URL here..."
+                    placeholder="Paste YouTube, TikTok, Instagram or Facebook URL..."
                     className="flex-1 bg-transparent text-sm text-gray-800 placeholder-gray-400 outline-none"
                     aria-label="Video URL input"
                   />
@@ -248,8 +245,8 @@ export default function Home() {
               <div className="mt-3 flex items-center justify-between px-1">
                 {status === "success" && <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-600"><CheckCircle2 size={14} /> Video ready to download</span>}
                 {status === "error" && <span className="flex items-center gap-1.5 text-xs font-medium text-red-500"><AlertCircle size={14} /> {error}</span>}
-                {(status === "idle" || status === "loading") && <span className="text-xs text-gray-400">Auto-detect platform</span>}
-                <span className="text-xs font-medium text-emerald-600">Safe • Fast • Secure</span>
+                {(status === "idle" || status === "loading") && <span className="text-xs text-gray-400"> Auto-detect platform</span>}
+                <span className="text-xs font-medium text-emerald-600">🛡 Safe • Fast • Secure</span>
               </div>
             </div>
           </div>

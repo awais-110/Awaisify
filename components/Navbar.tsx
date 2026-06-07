@@ -49,7 +49,7 @@ export default function Navbar() {
       }}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2 transition-transform duration-300 hover:scale-[1.02]">
+            <Link href="/" className="flex items-center gap-2 transition-transform duration-300 hover:scale-[1.02]">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
             <svg viewBox="0 0 24 24" fill="white" className="h-4 w-4">
               <polygon points="6,4 20,12 6,20" />
