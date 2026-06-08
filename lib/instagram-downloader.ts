@@ -2,6 +2,10 @@ import * as cheerio from "cheerio";
 
 type JsonRecord = Record<string, unknown>;
 
+interface InstagramFetchOptions {
+  cookies?: string;
+}
+
 interface InstagramMediaItem {
   quality: string;
   extension: string;
@@ -153,12 +157,16 @@ export function getPostIdFromUrl(url: string): string {
   }
 }
 
-export async function getPostPageHTML(url: string): Promise<string> {
+function withCookieHeader(headers: Record<string, string>, cookies?: string): Record<string, string> {
+  return cookies ? { ...headers, Cookie: cookies } : headers;
+}
+
+export async function getPostPageHTML(url: string, options: InstagramFetchOptions = {}): Promise<string> {
   const shortcode = getPostIdFromUrl(url);
   const pageUrl = shortcode ? `https://www.instagram.com/p/${encodeURIComponent(shortcode)}/` : url;
 
   const response = await fetch(pageUrl, {
-    headers: INSTAGRAM_HEADERS,
+    headers: withCookieHeader(INSTAGRAM_HEADERS, options.cookies),
     cache: "no-store",
     redirect: "follow",
   });
@@ -172,10 +180,10 @@ export async function getPostPageHTML(url: string): Promise<string> {
   return response.text();
 }
 
-export async function getPostGraphqlData(shortcode: string): Promise<unknown> {
+export async function getPostGraphqlData(shortcode: string, options: InstagramFetchOptions = {}): Promise<unknown> {
   const response = await fetch("https://www.instagram.com/api/graphql", {
     method: "POST",
-    headers: {
+    headers: withCookieHeader({
       "Accept": "*/*",
       "Accept-Language": "en-US,en;q=0.5",
       "Content-Type": "application/x-www-form-urlencoded",
@@ -190,7 +198,7 @@ export async function getPostGraphqlData(shortcode: string): Promise<unknown> {
       "Sec-Fetch-Site": "same-origin",
       "User-Agent":
         "Mozilla/5.0 (Linux; Android 11; SAMSUNG SM-G973U) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/14.2 Chrome/87.0.4280.141 Mobile Safari/537.36",
-    },
+    }, options.cookies),
     body: encodeGraphqlRequestData(shortcode),
     cache: "no-store",
     redirect: "follow",
@@ -309,13 +317,13 @@ function findDashVideoUrl(value: unknown): string {
   return "";
 }
 
-async function isDownloadableVideoUrl(url: string): Promise<boolean> {
+async function isDownloadableVideoUrl(url: string, options: InstagramFetchOptions = {}): Promise<boolean> {
   try {
     const response = await fetch(url, {
-      headers: {
+      headers: withCookieHeader({
         ...INSTAGRAM_MEDIA_HEADERS,
         "Range": "bytes=0-0",
-      },
+      }, options.cookies),
       cache: "no-store",
     });
 
@@ -325,11 +333,11 @@ async function isDownloadableVideoUrl(url: string): Promise<boolean> {
   }
 }
 
-async function findDownloadableVideoUrl(value: unknown): Promise<string> {
+async function findDownloadableVideoUrl(value: unknown, options: InstagramFetchOptions = {}): Promise<string> {
   const candidates = [findVideoUrl(value), findDashVideoUrl(value)].filter(Boolean);
 
   for (const candidate of candidates) {
-    if (await isDownloadableVideoUrl(candidate)) return candidate;
+    if (await isDownloadableVideoUrl(candidate, options)) return candidate;
   }
 
   return "";
@@ -362,13 +370,13 @@ function findThumbnail(value: unknown): string {
   return "";
 }
 
-export async function formatGraphqlJson(data: unknown, source: string): Promise<InstagramVideoResponse | null> {
+export async function formatGraphqlJson(data: unknown, source: string, options: InstagramFetchOptions = {}): Promise<InstagramVideoResponse | null> {
   const root = isRecord(data) && isRecord(data.data) ? data.data : {};
   const mediaData = isRecord(root.xdt_shortcode_media) ? root.xdt_shortcode_media : data;
 
   console.log("INSTAGRAM_GRAPHQL_HAS_MEDIA", isRecord(root.xdt_shortcode_media));
 
-  const videoUrl = await findDownloadableVideoUrl(mediaData);
+  const videoUrl = await findDownloadableVideoUrl(mediaData, options);
   console.log("INSTAGRAM_GRAPHQL_VIDEO_URL_EXISTS", Boolean(videoUrl));
 
   if (!videoUrl) return null;
@@ -376,7 +384,7 @@ export async function formatGraphqlJson(data: unknown, source: string): Promise<
   return createInstagramResponse(videoUrl, source, findThumbnail(mediaData));
 }
 
-export async function getVideoInfo(url: string): Promise<InstagramVideoResponse> {
+export async function getVideoInfo(url: string, options: InstagramFetchOptions = {}): Promise<InstagramVideoResponse> {
   const shortcode = getPostIdFromUrl(url);
 
   console.log("INSTAGRAM_SHORTCODE", { shortcode });
@@ -386,7 +394,7 @@ export async function getVideoInfo(url: string): Promise<InstagramVideoResponse>
   }
 
   try {
-    const html = await getPostPageHTML(url);
+    const html = await getPostPageHTML(url, options);
     const pageResult = formatPageJson(html, url);
 
     if (pageResult) return pageResult;
@@ -404,8 +412,8 @@ export async function getVideoInfo(url: string): Promise<InstagramVideoResponse>
   }
 
   try {
-    const graphqlData = await getPostGraphqlData(shortcode);
-    const graphqlResult = await formatGraphqlJson(graphqlData, url);
+    const graphqlData = await getPostGraphqlData(shortcode, options);
+    const graphqlResult = await formatGraphqlJson(graphqlData, url, options);
 
     if (graphqlResult) return graphqlResult;
   } catch (err: unknown) {

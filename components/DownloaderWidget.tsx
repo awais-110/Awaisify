@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertCircle, CheckCircle2, Download, Link2, Loader2, X } from "lucide-react";
 import VideoResult from "@/components/VideoResult";
 
@@ -44,6 +44,16 @@ export default function DownloaderWidget({
   const [status, setStatus] = useState<Status>("idle");
   const [video, setVideo] = useState<VideoData | null>(null);
   const [error, setError] = useState("");
+  const [cookies, setCookies] = useState("");
+  const [cookiesSaved, setCookiesSaved] = useState(false);
+  const [cookiesMessage, setCookiesMessage] = useState("");
+
+  useEffect(() => {
+    fetch("/api/downloader-cookies")
+      .then((response) => response.json())
+      .then((data) => setCookiesSaved(Boolean(data.saved)))
+      .catch(() => undefined);
+  }, []);
 
   function normalizeVideo(data: VideoData): VideoData {
     if (mode !== "audio-only") {
@@ -67,6 +77,43 @@ export default function DownloaderWidget({
       return allowedHosts.some((host) => hostname.includes(host));
     } catch {
       return true;
+    }
+  }
+
+  async function handleSaveCookies() {
+    setCookiesMessage("");
+
+    try {
+      const response = await fetch("/api/downloader-cookies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cookies }),
+      });
+      const data = (await response.json()) as { error?: string; saved?: boolean };
+
+      if (!response.ok || data.error) {
+        setCookiesMessage(data.error || "Failed to save cookies.");
+        return;
+      }
+
+      setCookies("");
+      setCookiesSaved(Boolean(data.saved));
+      setCookiesMessage("Cookies saved for your downloads.");
+    } catch {
+      setCookiesMessage("Failed to save cookies.");
+    }
+  }
+
+  async function handleClearCookies() {
+    setCookiesMessage("");
+
+    try {
+      await fetch("/api/downloader-cookies", { method: "DELETE" });
+      setCookies("");
+      setCookiesSaved(false);
+      setCookiesMessage("Cookies removed.");
+    } catch {
+      setCookiesMessage("Failed to remove cookies.");
     }
   }
 
@@ -164,6 +211,31 @@ export default function DownloaderWidget({
             )}
           </div>
           <span className="font-medium text-emerald-600">Safe • Fast • Secure</span>
+        </div>
+
+        <div className="mt-3 border-t border-blue-50 pt-3">
+          <label className="mb-1 block text-xs font-semibold text-gray-600">Cookies</label>
+          <textarea
+            value={cookies}
+            onChange={(event) => setCookies(event.target.value)}
+            placeholder="name=value; name2=value2"
+            className="min-h-16 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-700 outline-none transition-all focus:border-blue-400 focus:bg-white"
+          />
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <span className={`text-xs font-medium ${cookiesMessage.includes("Failed") || cookiesMessage.includes("Invalid") || cookiesMessage.includes("Enter") ? "text-red-500" : "text-gray-400"}`}>
+              {cookiesMessage || (cookiesSaved ? "Cookies saved for this browser." : "Optional for restricted videos.")}
+            </span>
+            <div className="flex gap-2">
+              {cookiesSaved && (
+                <button onClick={handleClearCookies} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-500 hover:text-gray-700">
+                  Clear
+                </button>
+              )}
+              <button onClick={handleSaveCookies} className="rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-gray-800">
+                Save Cookies
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -3,6 +3,10 @@ import { Innertube } from "youtubei.js";
 type JsonRecord = Record<string, unknown>;
 type InnertubeClient = Awaited<ReturnType<typeof Innertube.create>>;
 
+interface YouTubeFetchOptions {
+  cookies?: string;
+}
+
 interface YouTubeMediaItem {
   quality: string;
   extension: "mp4";
@@ -38,6 +42,10 @@ function getInnertube(): Promise<InnertubeClient> {
   }
 
   return innertubePromise;
+}
+
+function createInnertubeWithCookies(cookies: string): Promise<InnertubeClient> {
+  return Innertube.create({ cookie: cookies });
 }
 
 function isRecord(value: unknown): value is JsonRecord {
@@ -201,10 +209,12 @@ function normalizeYouTubeResponse(data: unknown, source: string): YouTubeVideoRe
   };
 }
 
-export async function fetchYouTubeVideo(url: string): Promise<YouTubeVideoResponse> {
+export async function fetchYouTubeVideo(url: string, options: YouTubeFetchOptions = {}): Promise<YouTubeVideoResponse> {
   try {
     const videoId = getYouTubeVideoId(url);
-    const innertube = await getInnertube();
+    const innertube = options.cookies
+      ? await createInnertubeWithCookies(options.cookies)
+      : await getInnertube();
     const data = await innertube.getInfo(videoId);
 
     console.log("YOUTUBE_INFO", {

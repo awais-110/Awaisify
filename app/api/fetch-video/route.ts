@@ -3,6 +3,7 @@ import Tiktok from "@tobyg74/tiktok-api-dl";
 import { FacebookDownloadError, fetchFacebookVideo } from "@/lib/facebook-downloader";
 import { getVideoInfo, InstagramDownloadError } from "@/lib/instagram-downloader";
 import { fetchYouTubeVideo, YouTubeDownloadError } from "@/lib/youtube-downloader";
+import { getDownloaderCookies, logDownloaderCookieUsage } from "@/lib/downloader-cookies";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -397,15 +398,19 @@ export async function POST(req: NextRequest) {
     if (!isAllowed) return NextResponse.json({ error: "Platform not supported" }, { status: 400 });
 
     requestPlatform = getUrlPlatform(url);
+    const downloaderCookies = getDownloaderCookies(req);
+    const cookiesSupported = requestPlatform === "youtube" || requestPlatform === "instagram";
+
+    logDownloaderCookieUsage(requestPlatform, Boolean(downloaderCookies), Boolean(downloaderCookies && cookiesSupported));
 
     const data = isTikTokUrl(url)
       ? await fetchTikTok(url)
       : isFacebookUrl(url)
         ? await fetchFacebookVideo(url)
       : isInstagramUrl(url)
-        ? await getVideoInfo(url)
+        ? await getVideoInfo(url, { cookies: downloaderCookies })
       : isYouTubeUrl(url)
-        ? await fetchYouTubeVideo(url).catch((err) => {
+        ? await fetchYouTubeVideo(url, { cookies: downloaderCookies }).catch((err) => {
           if (err instanceof YouTubeDownloadError && process.env.RAPIDAPI_KEY) {
             return fetchYouTube(url);
           }
